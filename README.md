@@ -6,7 +6,7 @@ npx prisma studio-show prisma database
 npx prisma generate-
 
 # b. The Development Order
-    1. User & Authentication       ✅/almost complete
+    1. User & Authentication 
     2. User profile
     3. Digital Products
     4. Digital Assets
@@ -34,36 +34,32 @@ npx prisma generate-
     
     9. Swagger documentation
     10. Test API
-    
-# d. deploy to production
-#1 check development version on local device
-#2 commit and push to Github
-#3 deploy to server production
-always make changes locally-push to github-pull server-run migratio/build/restart
+# c. deploy to server
+    1. Check development version on local device-clean local project
+        npx prisma validate
+        npx prisma generate
+        npm run build
+    2. commit and push the working version to github
+        git status
+        git add .
+        git commit -m "Complete core redmit system"
+        git push origin main
+    3. deploy to server production always make changes locally-push to github-pull server-run migratio/build/restart
+    4. check production environment
+        check production server has the required env. for Prisma 7 and prisma.config.ts to configure database url
+        do not commit .env
+        .gitignore should contain at least (node_modules/,.env,.env.*,!.env.example,uploads,dist)
+        careful with uploads/ for storing uploaded files there
 
-steps to deploy to server
-a) clean local project
-    npx prisma validate
-    npx prisma generate
-    npm run build
-b) commiting the working version
-    git status
-    git add .
-    git commit -m "Complete core redmit system"
-    git push origin main
-c) check production environment
-    -check production server has the required env. for Prisma 7 and prisma.config.ts to configure database url
-    - do not commit .env
-    -.gitignore should contain at least (node_modules/,.env,.env.*,!.env.example,uploads,dist)
-    -careful with uploads/ for storing uploaded files there
-d) Production deployment
-    -git pull origin main
-    npm install
-    npx prisma generate
-    npx prisma migrate deploy
-    npm run build
+    5. Production deployment
+        git pull origin main
+        npm install
+        npx prisma generate
+        npx prisma migrate deploy
+        npm run build
 
-    pm2 restart redmit-backend or 
-    pm2 start dist/server.js --name redmit-backend
+        pm2 restart redmit-backend or 
+        pm2 start dist/server.js --name redmit-backend
 
-    npx prisma migrate deploy
+        npx prisma migrate deploy
+   
