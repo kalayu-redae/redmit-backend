@@ -1,0 +1,513 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id String @id @default(uuid())
+
+  email        String @unique
+  phone        String @unique
+  username     String @unique
+  passwordHash String
+
+  fullName     String?
+  avatarFileId String? @unique
+
+  role UserRole @default(USER)
+
+  isVerified Boolean @default(false)
+  isActive   Boolean @default(true)
+
+  passwordResetOTP        String?
+  passwordResetOTPExpires DateTime?
+
+  passwordResetToken        String?
+  passwordResetTokenExpires DateTime?
+  mustChangePassword        Boolean   @default(false)
+
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+  avatar          File?            @relation("UserAvatar", fields: [avatarFileId], references: [id], onDelete: SetNull)
+  digitalProducts DigitalProduct[]
+  digitalAssets   DigitalAsset[]
+  digitalAccesses DigitalAccess[]
+  digitalGrowths  DigitalGrowth[]
+
+  orders           Order[]   @relation("BuyerOrders")
+  payments         Payment[] @relation("UserPayments")
+  verifiedPayments Payment[] @relation("PaymentVerifier")
+}
+
+enum UserRole {
+  USER
+  ADMIN
+}
+
+model File {
+  id String @id @default(uuid())
+
+  originalName String
+  filename     String
+  path         String
+  url          String
+
+  mimeType String
+  size     Int
+  category FileCategory
+
+  isPublic Boolean @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  userAvatar    User?     @relation("UserAvatar")
+  categoryImage Category? @relation("CategoryImage")
+
+  productThumbnail DigitalProduct? @relation("ProductThumbnail")
+  productFiles     ProductFile[]
+
+  digitalAssetThumbnails DigitalAsset[] @relation("DigitalAssetThumbnail")
+  digitalAssets          DigitalAsset[] @relation("DigitalAssetFiles")
+
+  digitalAccessThumbnails DigitalAccess[] @relation("DigitalAccessThumbnail")
+  digitalAccessFiles      DigitalAccess[] @relation("DigitalAccessFiles")
+
+  digitalGrowthThumbnails DigitalGrowth[] @relation("DigitalGrowthThumbnail")
+  digitalGrowthFiles      DigitalGrowth[] @relation("DigitalGrowthFiles")
+
+  paymentProof Payment? @relation("PaymentProof")
+}
+
+enum FileCategory {
+  IMAGE
+  DOCUMENT
+  VIDEO
+  AUDIO
+  ARCHIVE
+}
+
+model Category {
+  id          String   @id @default(uuid())
+  name        String   @unique
+  slug        String   @unique
+  description String?
+  imageId     String?  @unique
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  image           File?            @relation("CategoryImage", fields: [imageId], references: [id])
+  digitalProducts DigitalProduct[]
+
+  @@index([isActive])
+  @@index([createdAt])
+}
+
+model DigitalProduct {
+  id               String  @id @default(uuid())
+  name             String
+  slug             String  @unique
+  shortDescription String?
+  description      String?
+  price            Decimal @db.Decimal(12, 2)
+  currency         String  @default("USD")
+  isActive         Boolean @default(true)
+
+  categoryId  String
+  sellerId    String
+  thumbnailId String? @unique
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  category  Category @relation(fields: [categoryId], references: [id])
+  seller    User     @relation(fields: [sellerId], references: [id])
+  thumbnail File?    @relation("ProductThumbnail", fields: [thumbnailId], references: [id])
+
+  files      ProductFile[]
+  orderItems OrderItem[]
+
+  @@index([categoryId])
+  @@index([sellerId])
+  @@index([isActive])
+  @@index([createdAt])
+}
+
+model ProductFile {
+  id        String   @id @default(uuid())
+  productId String
+  fileId    String
+  createdAt DateTime @default(now())
+
+  product DigitalProduct @relation(fields: [productId], references: [id], onDelete: Cascade)
+  file    File           @relation(fields: [fileId], references: [id], onDelete: Cascade)
+
+  @@unique([productId, fileId])
+  @@index([productId])
+  @@index([fileId])
+}
+
+model DigitalAsset {
+  id String @id @default(uuid())
+
+  sellerId String
+  seller   User   @relation(fields: [sellerId], references: [id])
+
+  name        String
+  slug        String           @unique
+  type        DigitalAssetType
+  description String?
+
+  price    Decimal @db.Decimal(12, 2)
+  currency String  @default("USD")
+
+  thumbnailId String?
+  thumbnail   File?   @relation("DigitalAssetThumbnail", fields: [thumbnailId], references: [id], onDelete: SetNull)
+
+  files File[] @relation("DigitalAssetFiles")
+
+  socialMediaDetails SocialMediaAsset?
+  otherDetails       OtherAsset?
+
+  isActive Boolean @default(true)
+  isSold   Boolean @default(false)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  orderItems OrderItem[]
+
+  @@index([sellerId])
+  @@index([type])
+  @@index([isActive])
+  @@index([isSold])
+  @@index([createdAt])
+}
+
+enum DigitalAssetType {
+  SOCIAL_MEDIA_ACCOUNT
+  OTHER
+}
+
+enum SocialMediaPlatform {
+  FACEBOOK
+  INSTAGRAM
+  TIKTOK
+  YOUTUBE
+  X
+  LINKEDIN
+  TELEGRAM
+  OTHER
+}
+
+model SocialMediaAsset {
+  id      String @id @default(uuid())
+  assetId String @unique
+
+  asset DigitalAsset @relation(fields: [assetId], references: [id], onDelete: Cascade)
+
+  platform   SocialMediaPlatform
+  username   String?
+  profileUrl String?
+
+  followers Int?
+  following Int?
+  posts     Int?
+  views     Int?
+
+  country        String?
+  niche          String?
+  engagementRate Decimal? @db.Decimal(5, 2)
+
+  monthlyRevenue  Decimal? @db.Decimal(12, 2)
+  revenueCurrency String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model OtherAsset {
+  id      String @id @default(uuid())
+  assetId String @unique
+
+  asset DigitalAsset @relation(fields: [assetId], references: [id], onDelete: Cascade)
+
+  category String?
+  url      String?
+  platform String?
+  details  Json?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+enum DigitalAccessType {
+  ONLINE_COURSE
+  DOMAIN
+  HOSTING
+  SOFTWARE_SUBSCRIPTION
+  EXAM_REGISTRATION
+  VISA_SERVICE
+  OTHER
+}
+
+model DigitalAccess {
+  id String @id @default(uuid())
+
+  providerId String
+  provider   User   @relation(fields: [providerId], references: [id])
+
+  name        String
+  slug        String            @unique
+  type        DigitalAccessType
+  description String?
+
+  price    Decimal @db.Decimal(12, 2)
+  currency String  @default("USD")
+
+  thumbnailId String?
+  thumbnail   File?   @relation("DigitalAccessThumbnail", fields: [thumbnailId], references: [id], onDelete: SetNull)
+
+  files File[] @relation("DigitalAccessFiles")
+
+  details Json?
+
+  isActive Boolean @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  orderItems OrderItem[]
+
+  @@index([providerId])
+  @@index([type])
+  @@index([isActive])
+  @@index([createdAt])
+}
+
+enum DigitalGrowthType {
+  SOCIAL_MEDIA_PROMOTION
+  FACEBOOK_ADS
+  TIKTOK_ADS
+  INSTAGRAM_ADS
+  YOUTUBE_ADS
+  GOOGLE_ADS
+  SOCIAL_MEDIA_MONETIZATION
+  OTHER
+}
+
+model DigitalGrowth {
+  id String @id @default(uuid())
+
+  providerId String
+  provider   User   @relation(fields: [providerId], references: [id])
+
+  name        String
+  slug        String            @unique
+  type        DigitalGrowthType
+  description String?
+
+  price    Decimal @db.Decimal(12, 2)
+  currency String  @default("USD")
+
+  thumbnailId String?
+  thumbnail   File?   @relation("DigitalGrowthThumbnail", fields: [thumbnailId], references: [id], onDelete: SetNull)
+
+  files File[] @relation("DigitalGrowthFiles")
+
+  details Json?
+
+  isActive Boolean @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  orderItems OrderItem[]
+
+  @@index([providerId])
+  @@index([type])
+  @@index([isActive])
+  @@index([createdAt])
+}
+
+enum OrderItemType {
+  DIGITAL_PRODUCT
+  DIGITAL_ASSET
+  DIGITAL_ACCESS
+  DIGITAL_GROWTH
+}
+
+enum OrderStatus {
+  PENDING
+  CONFIRMED
+  PROCESSING
+  COMPLETED
+  CANCELLED
+  REFUNDED
+}
+
+model Order {
+  id          String @id @default(uuid())
+  orderNumber String @unique
+
+  buyerId String
+  buyer   User   @relation("BuyerOrders", fields: [buyerId], references: [id])
+
+  subtotal Decimal @db.Decimal(12, 2)
+  discount Decimal @default(0) @db.Decimal(12, 2)
+  tax      Decimal @default(0) @db.Decimal(12, 2)
+  total    Decimal @db.Decimal(12, 2)
+
+  currency String      @default("USD")
+  status   OrderStatus @default(PENDING)
+
+  items OrderItem[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  payments Payment[]
+
+  @@index([buyerId])
+  @@index([status])
+  @@index([createdAt])
+}
+
+model OrderItem {
+  id String @id @default(uuid())
+
+  orderId String
+  order   Order  @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  type OrderItemType
+
+  digitalProductId String?
+  digitalProduct   DigitalProduct? @relation(fields: [digitalProductId], references: [id], onDelete: SetNull)
+
+  digitalAssetId String?
+  digitalAsset   DigitalAsset? @relation(fields: [digitalAssetId], references: [id], onDelete: SetNull)
+
+  digitalAccessId String?
+  digitalAccess   DigitalAccess? @relation(fields: [digitalAccessId], references: [id], onDelete: SetNull)
+
+  digitalGrowthId String?
+  digitalGrowth   DigitalGrowth? @relation(fields: [digitalGrowthId], references: [id], onDelete: SetNull)
+
+  name       String
+  quantity   Int     @default(1)
+  unitPrice  Decimal @db.Decimal(12, 2)
+  totalPrice Decimal @db.Decimal(12, 2)
+  currency   String  @default("USD")
+
+  createdAt DateTime @default(now())
+
+  @@index([orderId])
+  @@index([type])
+  @@index([digitalProductId])
+  @@index([digitalAssetId])
+  @@index([digitalAccessId])
+  @@index([digitalGrowthId])
+}
+
+enum PaymentMethod {
+  MANUAL_BANK_TRANSFER
+  CHAPA
+  STRIPE
+  PAYPAL
+}
+
+enum PaymentStatus {
+  PENDING
+  PROCESSING
+  COMPLETED
+  FAILED
+  CANCELLED
+  REFUNDED
+}
+
+enum ManualPaymentStatus {
+  NOT_REQUIRED
+  PENDING_VERIFICATION
+  VERIFIED
+  REJECTED
+}
+
+model BankAccount {
+  id String @id @default(uuid())
+
+  bankName      String
+  accountName   String
+  accountNumber String
+  phoneNumber   String?
+  accountType   String?
+  instructions  String?
+  logoUrl       String?
+
+  isActive Boolean @default(true)
+
+  payments Payment[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([bankName])
+  @@index([isActive])
+}
+
+model Payment {
+  id            String @id @default(uuid())
+  paymentNumber String @unique
+
+  orderId String
+  order   Order  @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  userId String
+  user   User   @relation("UserPayments", fields: [userId], references: [id])
+
+  method PaymentMethod
+  status PaymentStatus @default(PENDING)
+
+  amount   Decimal @db.Decimal(12, 2)
+  currency String  @default("USD")
+
+  transactionReference  String?
+  providerTransactionId String?
+
+  checkoutUrl String?
+
+  manualStatus ManualPaymentStatus @default(NOT_REQUIRED)
+
+  bankAccountId String?
+  bankAccount   BankAccount? @relation(fields: [bankAccountId], references: [id], onDelete: SetNull)
+
+  proofFileId String? @unique
+  proofFile   File?   @relation("PaymentProof", fields: [proofFileId], references: [id], onDelete: SetNull)
+
+  rejectionReason String?
+
+  verifiedById String?
+  verifiedBy   User?   @relation("PaymentVerifier", fields: [verifiedById], references: [id], onDelete: SetNull)
+
+  verifiedAt DateTime?
+  paidAt     DateTime?
+
+  metadata Json?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([orderId])
+  @@index([userId])
+  @@index([status])
+  @@index([method])
+  @@index([transactionReference])
+  @@index([providerTransactionId])
+  @@index([bankAccountId])
+  @@index([verifiedById])
+  @@index([createdAt])
+}

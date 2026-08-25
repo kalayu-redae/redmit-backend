@@ -1,0 +1,26 @@
+import { Router } from "express";
+import {
+    createPayment,
+    getPayments,
+    getPayment,
+    submitManualPayment,
+    uploadPaymentProof,
+    verifyPayment,
+    rejectPayment,
+    cancelPayment,
+} from "./payment.controller.js";
+import { upload } from "../../middleware/upload.middleware.js";
+import { jwtAuthenticate } from "../../middleware/jwtAuthenticate.js";
+
+const router = Router();
+
+router.post("/", jwtAuthenticate, createPayment);
+router.get("/", jwtAuthenticate, getPayments);
+router.get("/:id", jwtAuthenticate, getPayment);
+router.patch("/:id/manual", jwtAuthenticate, submitManualPayment);
+router.patch("/:id/proof", jwtAuthenticate, upload.single("file"), uploadPaymentProof);
+router.patch("/:id/verify", jwtAuthenticate, verifyPayment);
+router.patch("/:id/reject", jwtAuthenticate, rejectPayment);
+router.patch("/:id/cancel", jwtAuthenticate, cancelPayment);
+
+export default router;
