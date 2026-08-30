@@ -1,4 +1,4 @@
-import e, { Request, Response, NextFunction } from "express";
+import { Request, Response, NextFunction } from "express";
 import argon2 from "argon2";
 import jwt from "jsonwebtoken";
 import crypto from "crypto";
@@ -87,8 +87,15 @@ export const login = catchAsync(async (req: Request, res: Response, next: NextFu
 
     const { email, username, phone, password } = data;
 
+    if (!email && !username && !phone) {
+        return next(new AppError("Please provide an email, username, or phone number", 400));
+    }
+
+    // Build a single unique where clause — Prisma findUnique requires exactly one unique field
+    const where = email ? { email } : username ? { username } : { phone: phone! };
+
     const user = await prisma.user.findUnique({
-        where: { email: email || undefined, phone: phone || undefined, username: username || undefined },
+        where,
         include: {
             avatar: true,
         },
@@ -172,9 +179,27 @@ export const updateMe = catchAsync(async (req: Request, res: Response, next: Nex
 
     const data: any = {};
 
-    if (email !== undefined) data.email = email.toLowerCase().trim();
-    if (phone !== undefined) data.phone = phone.trim();
-    if (username !== undefined) data.username = username.toLowerCase().trim();
+    const normalizedEmail = email !== undefined ? String(email).toLowerCase().trim() : undefined;
+    const normalizedPhone = phone !== undefined ? String(phone).trim() : undefined;
+    const normalizedUsername = username !== undefined ? String(username).toLowerCase().trim() : undefined;
+
+    // Pre-check uniqueness to return clean 409s instead of a raw Prisma P2002 error
+    if (normalizedEmail !== undefined && normalizedEmail !== user.email) {
+        const taken = await prisma.user.findUnique({ where: { email: normalizedEmail } });
+        if (taken) return next(new AppError("Email is already in use", 409));
+    }
+    if (normalizedPhone !== undefined && normalizedPhone !== user.phone) {
+        const taken = await prisma.user.findUnique({ where: { phone: normalizedPhone } });
+        if (taken) return next(new AppError("Phone number is already in use", 409));
+    }
+    if (normalizedUsername !== undefined && normalizedUsername !== user.username) {
+        const taken = await prisma.user.findUnique({ where: { username: normalizedUsername } });
+        if (taken) return next(new AppError("Username is already taken", 409));
+    }
+
+    if (normalizedEmail !== undefined) data.email = normalizedEmail;
+    if (normalizedPhone !== undefined) data.phone = normalizedPhone;
+    if (normalizedUsername !== undefined) data.username = normalizedUsername;
     if (fullName !== undefined) data.fullName = fullName.trim();
 
     // Handle new avatar

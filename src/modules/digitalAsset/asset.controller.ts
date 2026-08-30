@@ -218,6 +218,7 @@ export const updateDigitalAsset = catchAsync(async (req: Request, res: Response,
     const assetFiles = files?.files || [];
 
     let thumbnailId = asset.thumbnailId;
+    const oldThumbnailId = asset.thumbnailId;
 
     if (thumbnailFile) {
         const uploadedThumbnail = await FileManager.upload(thumbnailFile);
@@ -326,6 +327,11 @@ export const updateDigitalAsset = catchAsync(async (req: Request, res: Response,
         },
     });
 
+    // Delete old thumbnail from storage after successful update
+    if (thumbnailFile && oldThumbnailId) {
+        await FileManager.delete(oldThumbnailId);
+    }
+
     return res.status(200).json({ status: 1, message: "Digital asset updated successfully", data: result });
 });
 
@@ -384,6 +390,12 @@ export const deleteDigitalAsset = catchAsync(async (req: Request, res: Response,
     if (asset.sellerId !== sellerId) return next(new AppError("You are not allowed to delete this asset", 403));
 
     await prisma.digitalAsset.delete({ where: { id } });
+
+    // Clean up thumbnail and all associated files from storage
+    if (asset.thumbnailId) await FileManager.delete(asset.thumbnailId);
+    if (asset.files.length > 0) {
+        await Promise.all(asset.files.map(file => FileManager.delete(file.id)));
+    }
 
     return res.status(200).json({ status: 1, message: "Digital asset deleted successfully" });
 });

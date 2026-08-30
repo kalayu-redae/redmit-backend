@@ -1,11 +1,13 @@
 import { Router } from "express";
 import { upload } from "../../middleware/upload.middleware.js";
+import { jwtAuthenticate } from "../../middleware/jwtAuthenticate.js";
 import FileManager from "../../utils/file/file.manager.js";
 import catchAsync from "../../utils/catchAsync.js";
 
 const router = Router();
 
-router.post("/", upload.single("file"), catchAsync(async (req, res) => {
+// Upload routes — require authentication
+router.post("/", jwtAuthenticate, upload.single("file"), catchAsync(async (req, res) => {
     if (!req.file) {
         return res.status(400).json({
             status: 0,
@@ -22,7 +24,7 @@ router.post("/", upload.single("file"), catchAsync(async (req, res) => {
     });
 }));
 
-router.post("/many", upload.array("files", 20), catchAsync(async (req, res) => {
+router.post("/many", jwtAuthenticate, upload.array("files", 20), catchAsync(async (req, res) => {
     const files = req.files as Express.Multer.File[];
 
     if (!files || files.length === 0) {
@@ -42,6 +44,7 @@ router.post("/many", upload.array("files", 20), catchAsync(async (req, res) => {
     });
 }));
 
+// Read routes — public
 router.get("/", catchAsync(async (req, res) => {
     const ids = String(req.query.ids || "")
         .split(",")
@@ -80,7 +83,8 @@ router.get("/:id", catchAsync(async (req, res) => {
     });
 }));
 
-router.delete("/", catchAsync(async (req, res) => {
+// Delete routes — require authentication
+router.delete("/", jwtAuthenticate, catchAsync(async (req, res) => {
     const { ids } = req.body;
 
     if (!Array.isArray(ids) || ids.length === 0) {
@@ -100,7 +104,7 @@ router.delete("/", catchAsync(async (req, res) => {
     });
 }));
 
-router.delete("/:id", catchAsync(async (req, res) => {
+router.delete("/:id", jwtAuthenticate, catchAsync(async (req, res) => {
     const file = await FileManager.delete(req.params.id as string);
 
     if (!file) {

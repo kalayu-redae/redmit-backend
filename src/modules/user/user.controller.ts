@@ -94,7 +94,7 @@ export const updateUser = catchAsync(async (req: Request, res: Response, next: N
     if (isActive !== undefined) data.isActive = isActive === true || isActive === "true";
     if (req.file) {
         const newAvatar = await FileManager.upload(req.file);
-        data.avatar = { connect: { id: newAvatar.id } };
+        data.avatarFileId = newAvatar.id;
     }
     const user = await prisma.user.update({ where: { id }, data, include: { avatar: true } });
     if (req.file && existingUser.avatar) await FileManager.delete(existingUser.avatar.id);
@@ -116,7 +116,7 @@ export const resetPassword = catchAsync(async (req: Request, res: Response, next
 
     await prisma.user.update({
         where: { id },
-        data: { passwordHash },
+        data: { passwordHash, mustChangePassword: true },
     });
 
     try {

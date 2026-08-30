@@ -16,6 +16,10 @@ export const createPayment = catchAsync(async (req: Request, res: Response, next
 
     const order = await prisma.order.findUnique({ where: { id: orderId } });
     if (!order) return next(new AppError("Order not found", 404));
+
+    // Ensure the order belongs to the requesting user
+    if (order.buyerId !== userId) return next(new AppError("Forbidden", 403));
+
     if (order.total.lte(0)) {
         return next(new AppError("Invalid order total", 400));
     }
@@ -56,7 +60,14 @@ export const createPayment = catchAsync(async (req: Request, res: Response, next
 });
 
 export const getPayments = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
+    const userId = req.user?.id;
+    const isAdmin = req.user?.role === "ADMIN";
+
+    // Admins see all payments; regular users only see their own
+    const where = isAdmin ? {} : { userId };
+
     const payments = await prisma.payment.findMany({
+        where,
         include: {
             order: true,
             user: {
@@ -89,6 +100,8 @@ export const getPayments = catchAsync(async (req: Request, res: Response, next: 
 
 export const getPayment = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
     const { id } = req.params as { id: string };
+    const userId = req.user?.id;
+    const isAdmin = req.user?.role === "ADMIN";
 
     const payment = await prisma.payment.findUnique({
         where: { id },
@@ -116,6 +129,9 @@ export const getPayment = catchAsync(async (req: Request, res: Response, next: N
 
     if (!payment) return next(new AppError("Payment not found", 404));
 
+    // Non-admins may only view their own payments
+    if (!isAdmin && payment.userId !== userId) return next(new AppError("Forbidden", 403));
+
     return res.status(200).json({
         status: 1,
         message: "Payment retrieved successfully",
@@ -125,6 +141,7 @@ export const getPayment = catchAsync(async (req: Request, res: Response, next: N
 
 export const submitManualPayment = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
     const { id } = req.params as { id: string };
+    const userId = req.user?.id;
     const { transactionReference } = req.body;
 
     if (!transactionReference) return next(new AppError("Transaction reference is required", 400));
@@ -132,6 +149,10 @@ export const submitManualPayment = catchAsync(async (req: Request, res: Response
     const payment = await prisma.payment.findUnique({ where: { id } });
 
     if (!payment) return next(new AppError("Payment not found", 404));
+
+    // Only the payment owner can submit a reference
+    if (payment.userId !== userId) return next(new AppError("Forbidden", 403));
+
     if (payment.method !== "MANUAL_BANK_TRANSFER") return next(new AppError("This payment is not a manual bank transfer", 400));
     if (payment.status === "COMPLETED") return next(new AppError("Payment has already been completed", 400));
 
@@ -157,12 +178,17 @@ export const submitManualPayment = catchAsync(async (req: Request, res: Response
 
 export const uploadPaymentProof = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
     const { id } = req.params as { id: string };
+    const userId = req.user?.id;
 
     if (!req.file) return next(new AppError("Payment proof file is required", 400));
 
     const payment = await prisma.payment.findUnique({ where: { id } });
 
     if (!payment) return next(new AppError("Payment not found", 404));
+
+    // Only the payment owner can upload proof
+    if (payment.userId !== userId) return next(new AppError("Forbidden", 403));
+
     if (payment.status === "COMPLETED") return next(new AppError("Payment has already been completed", 400));
 
     const file = await fileManager.upload(req.file);
@@ -190,6 +216,9 @@ export const verifyPayment = catchAsync(async (req: Request, res: Response, next
     const verifiedById = req.user?.id;
 
     if (!verifiedById) return next(new AppError("Authentication required", 401));
+
+    // Only admins may verify payments
+    if (req.user?.role !== "ADMIN") return next(new AppError("You do not have permission to perform this action", 403));
 
     const payment = await prisma.payment.findUnique({
         where: { id },
@@ -240,6 +269,9 @@ export const rejectPayment = catchAsync(async (req: Request, res: Response, next
 
     if (!rejectionReason) return next(new AppError("Rejection reason is required", 400));
 
+    // Only admins may reject payments
+    if (req.user?.role !== "ADMIN") return next(new AppError("You do not have permission to perform this action", 403));
+
     const payment = await prisma.payment.findUnique({ where: { id } });
 
     if (!payment) return next(new AppError("Payment not found", 404));
@@ -267,10 +299,15 @@ export const rejectPayment = catchAsync(async (req: Request, res: Response, next
 
 export const cancelPayment = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
     const { id } = req.params as { id: string };
+    const userId = req.user?.id;
 
     const payment = await prisma.payment.findUnique({ where: { id } });
 
     if (!payment) return next(new AppError("Payment not found", 404));
+
+    // Only the payment owner can cancel their own payment
+    if (payment.userId !== userId) return next(new AppError("Forbidden", 403));
+
     if (payment.status === "COMPLETED") return next(new AppError("Completed payment cannot be cancelled", 400));
 
     const updatedPayment = await prisma.payment.update({

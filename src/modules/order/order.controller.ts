@@ -38,6 +38,7 @@ export const createOrder = catchAsync(async (req: Request, res: Response, next: 
                 const asset = await prisma.digitalAsset.findUnique({ where: { id: item.id } });
                 if (!asset) return next(new AppError("Digital asset not found", 404));
                 if (!asset.isActive) return next(new AppError("Digital asset is not available", 400));
+                if (asset.isSold) return next(new AppError("Digital asset has already been sold", 400));
 
                 name = asset.name;
                 price = Number(asset.price);

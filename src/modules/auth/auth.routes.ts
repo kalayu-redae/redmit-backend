@@ -1,6 +1,6 @@
 import { Router } from "express";
 
-import { register, login, getMe, updateMe, forgotPassword, resetPassword, updateMyPassword } from "./auth.controller.js";
+import { register, login, getMe, updateMe, forgotPassword, resetPassword, updateMyPassword, removeMyAvatar } from "./auth.controller.js";
 import { jwtAuthenticate } from "../../middleware/jwtAuthenticate.js";
 import { upload } from "../../middleware/upload.middleware.js";
 
@@ -39,6 +39,7 @@ router.get("/me", jwtAuthenticate, getMe);
 router.patch("/me", jwtAuthenticate, upload.single("avatar"), updateMe);
 
 router.patch("/update-my-password", jwtAuthenticate, updateMyPassword);
+router.delete("/me/avatar", jwtAuthenticate, removeMyAvatar);
 
 
 export default router;
