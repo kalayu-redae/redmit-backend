@@ -11,7 +11,8 @@ const router = Router();
  * /api/files:
  *   post:
  *     summary: Upload a single file
- *     tags: [Files]
+ *     tags:
+ *       - Files
  *     security:
  *       - bearerAuth: []
  *     requestBody:
@@ -20,7 +21,8 @@ const router = Router();
  *         multipart/form-data:
  *           schema:
  *             type: object
- *             required: [file]
+ *             required:
+ *               - file
  *             properties:
  *               file:
  *                 type: string
@@ -33,20 +35,91 @@ const router = Router();
  *             schema:
  *               type: object
  *               properties:
- *                 status: { type: integer, example: 1 }
+ *                 status:
+ *                   type: integer
+ *                   example: 1
  *                 data:
  *                   $ref: '#/components/schemas/File'
  *       400:
  *         description: No file uploaded
  *       401:
  *         description: Not authenticated
+ *   get:
+ *     summary: Get multiple files by comma-separated IDs
+ *     tags:
+ *       - Files
+ *     parameters:
+ *       - in: query
+ *         name: ids
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Comma-separated file UUIDs e.g. id1,id2,id3
+ *     responses:
+ *       200:
+ *         description: Files retrieved
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: integer
+ *                   example: 1
+ *                 count:
+ *                   type: integer
+ *                 data:
+ *                   type: array
+ *                   items:
+ *                     $ref: '#/components/schemas/File'
+ *       400:
+ *         description: No IDs provided
+ *   delete:
+ *     summary: Delete multiple files by IDs
+ *     tags:
+ *       - Files
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - ids
+ *             properties:
+ *               ids:
+ *                 type: array
+ *                 items:
+ *                   type: string
+ *                   format: uuid
+ *     responses:
+ *       200:
+ *         description: Files deleted
+ *       400:
+ *         description: No IDs provided
+ *       401:
+ *         description: Not authenticated
  */
 router.post("/", jwtAuthenticate, upload.single("file"), catchAsync(async (req, res) => {
-    if (!req.file) {
-        return res.status(400).json({ status: 0, message: "No file uploaded" });
-    }
+    if (!req.file) return res.status(400).json({ status: 0, message: "No file uploaded" });
     const file = await FileManager.upload(req.file);
     return res.status(201).json({ status: 1, message: "File uploaded successfully", data: file });
+}));
+
+router.get("/", catchAsync(async (req, res) => {
+    const ids = String(req.query.ids || "").split(",").map(id => id.trim()).filter(Boolean);
+    if (ids.length === 0) return res.status(400).json({ status: 0, message: "Please provide file IDs" });
+    const files = await FileManager.getMany(ids);
+    return res.status(200).json({ status: 1, count: files.length, data: files });
+}));
+
+router.delete("/", jwtAuthenticate, catchAsync(async (req, res) => {
+    const { ids } = req.body;
+    if (!Array.isArray(ids) || ids.length === 0) return res.status(400).json({ status: 0, message: "Please provide an array of file IDs" });
+    const files = await FileManager.deleteMany(ids);
+    return res.status(200).json({ status: 1, message: "Files deleted successfully", count: files.length, data: files });
 }));
 
 /**
@@ -54,7 +127,8 @@ router.post("/", jwtAuthenticate, upload.single("file"), catchAsync(async (req, 
  * /api/files/many:
  *   post:
  *     summary: Upload multiple files (max 20)
- *     tags: [Files]
+ *     tags:
+ *       - Files
  *     security:
  *       - bearerAuth: []
  *     requestBody:
@@ -63,14 +137,15 @@ router.post("/", jwtAuthenticate, upload.single("file"), catchAsync(async (req, 
  *         multipart/form-data:
  *           schema:
  *             type: object
- *             required: [files]
+ *             required:
+ *               - files
  *             properties:
  *               files:
  *                 type: array
+ *                 maxItems: 20
  *                 items:
  *                   type: string
  *                   format: binary
- *                 maxItems: 20
  *     responses:
  *       201:
  *         description: Files uploaded successfully
@@ -79,8 +154,11 @@ router.post("/", jwtAuthenticate, upload.single("file"), catchAsync(async (req, 
  *             schema:
  *               type: object
  *               properties:
- *                 status: { type: integer, example: 1 }
- *                 count: { type: integer }
+ *                 status:
+ *                   type: integer
+ *                   example: 1
+ *                 count:
+ *                   type: integer
  *                 data:
  *                   type: array
  *                   items:
@@ -92,49 +170,9 @@ router.post("/", jwtAuthenticate, upload.single("file"), catchAsync(async (req, 
  */
 router.post("/many", jwtAuthenticate, upload.array("files", 20), catchAsync(async (req, res) => {
     const files = req.files as Express.Multer.File[];
-    if (!files || files.length === 0) {
-        return res.status(400).json({ status: 0, message: "No files uploaded" });
-    }
+    if (!files || files.length === 0) return res.status(400).json({ status: 0, message: "No files uploaded" });
     const savedFiles = await FileManager.uploadMany(files);
     return res.status(201).json({ status: 1, message: "Files uploaded successfully", count: savedFiles.length, data: savedFiles });
-}));
-
-/**
- * @swagger
- * /api/files:
- *   get:
- *     summary: Get multiple files by comma-separated IDs
- *     tags: [Files]
- *     parameters:
- *       - in: query
- *         name: ids
- *         required: true
- *         schema: { type: string }
- *         description: Comma-separated file UUIDs e.g. id1,id2,id3
- *     responses:
- *       200:
- *         description: Files retrieved
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 status: { type: integer, example: 1 }
- *                 count: { type: integer }
- *                 data:
- *                   type: array
- *                   items:
- *                     $ref: '#/components/schemas/File'
- *       400:
- *         description: No IDs provided
- */
-router.get("/", catchAsync(async (req, res) => {
-    const ids = String(req.query.ids || "").split(",").map(id => id.trim()).filter(Boolean);
-    if (ids.length === 0) {
-        return res.status(400).json({ status: 0, message: "Please provide file IDs" });
-    }
-    const files = await FileManager.getMany(ids);
-    return res.status(200).json({ status: 1, count: files.length, data: files });
 }));
 
 /**
@@ -142,12 +180,15 @@ router.get("/", catchAsync(async (req, res) => {
  * /api/files/{id}:
  *   get:
  *     summary: Get a single file by ID
- *     tags: [Files]
+ *     tags:
+ *       - Files
  *     parameters:
  *       - in: path
  *         name: id
  *         required: true
- *         schema: { type: string, format: uuid }
+ *         schema:
+ *           type: string
+ *           format: uuid
  *     responses:
  *       200:
  *         description: File found
@@ -156,69 +197,26 @@ router.get("/", catchAsync(async (req, res) => {
  *             schema:
  *               type: object
  *               properties:
- *                 status: { type: integer, example: 1 }
+ *                 status:
+ *                   type: integer
+ *                   example: 1
  *                 data:
  *                   $ref: '#/components/schemas/File'
  *       404:
  *         description: File not found
- */
-router.get("/:id", catchAsync(async (req, res) => {
-    const file = await FileManager.get(req.params.id as string);
-    if (!file) {
-        return res.status(404).json({ status: 0, message: "File not found" });
-    }
-    return res.status(200).json({ status: 1, data: file });
-}));
-
-/**
- * @swagger
- * /api/files:
- *   delete:
- *     summary: Delete multiple files by IDs
- *     tags: [Files]
- *     security:
- *       - bearerAuth: []
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             required: [ids]
- *             properties:
- *               ids:
- *                 type: array
- *                 items: { type: string, format: uuid }
- *     responses:
- *       200:
- *         description: Files deleted
- *       400:
- *         description: No IDs provided
- *       401:
- *         description: Not authenticated
- */
-router.delete("/", jwtAuthenticate, catchAsync(async (req, res) => {
-    const { ids } = req.body;
-    if (!Array.isArray(ids) || ids.length === 0) {
-        return res.status(400).json({ status: 0, message: "Please provide an array of file IDs" });
-    }
-    const files = await FileManager.deleteMany(ids);
-    return res.status(200).json({ status: 1, message: "Files deleted successfully", count: files.length, data: files });
-}));
-
-/**
- * @swagger
- * /api/files/{id}:
  *   delete:
  *     summary: Delete a single file by ID
- *     tags: [Files]
+ *     tags:
+ *       - Files
  *     security:
  *       - bearerAuth: []
  *     parameters:
  *       - in: path
  *         name: id
  *         required: true
- *         schema: { type: string, format: uuid }
+ *         schema:
+ *           type: string
+ *           format: uuid
  *     responses:
  *       200:
  *         description: File deleted
@@ -227,11 +225,15 @@ router.delete("/", jwtAuthenticate, catchAsync(async (req, res) => {
  *       404:
  *         description: File not found
  */
+router.get("/:id", catchAsync(async (req, res) => {
+    const file = await FileManager.get(req.params.id as string);
+    if (!file) return res.status(404).json({ status: 0, message: "File not found" });
+    return res.status(200).json({ status: 1, data: file });
+}));
+
 router.delete("/:id", jwtAuthenticate, catchAsync(async (req, res) => {
     const file = await FileManager.delete(req.params.id as string);
-    if (!file) {
-        return res.status(404).json({ status: 0, message: "File not found" });
-    }
+    if (!file) return res.status(404).json({ status: 0, message: "File not found" });
     return res.status(200).json({ status: 1, message: "File deleted successfully", data: file });
 }));
 

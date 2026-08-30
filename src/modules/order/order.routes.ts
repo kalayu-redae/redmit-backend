@@ -11,7 +11,8 @@ router.use(jwtAuthenticate);
  * /api/orders:
  *   post:
  *     summary: Create a new order
- *     tags: [Orders]
+ *     tags:
+ *       - Orders
  *     security:
  *       - bearerAuth: []
  *     requestBody:
@@ -28,36 +29,42 @@ router.use(jwtAuthenticate);
  *             schema:
  *               type: object
  *               properties:
- *                 status: { type: integer, example: 1 }
+ *                 status:
+ *                   type: integer
+ *                   example: 1
  *                 data:
  *                   $ref: '#/components/schemas/Order'
  *       400:
- *         description: Validation error or item not available / already sold
+ *         description: Validation error or item not available
  *       401:
  *         description: Not authenticated
  *       404:
  *         description: One of the order items was not found
- */
-router.post("/", createOrder);
-
-/**
- * @swagger
- * /api/orders:
  *   get:
- *     summary: Get the authenticated buyer's orders with optional status filter and pagination
- *     tags: [Orders]
+ *     summary: Get the authenticated buyer's orders
+ *     tags:
+ *       - Orders
  *     security:
  *       - bearerAuth: []
  *     parameters:
  *       - in: query
  *         name: page
- *         schema: { type: integer, default: 1 }
+ *         schema:
+ *           type: integer
+ *           default: 1
  *       - in: query
  *         name: limit
- *         schema: { type: integer, default: 10 }
+ *         schema:
+ *           type: integer
+ *           default: 10
  *       - in: query
  *         name: status
- *         schema: { type: string, enum: [PENDING, CONFIRMED, CANCELLED] }
+ *         schema:
+ *           type: string
+ *           enum:
+ *             - PENDING
+ *             - CONFIRMED
+ *             - CANCELLED
  *     responses:
  *       200:
  *         description: Paginated list of orders
@@ -66,7 +73,9 @@ router.post("/", createOrder);
  *             schema:
  *               type: object
  *               properties:
- *                 status: { type: integer, example: 1 }
+ *                 status:
+ *                   type: integer
+ *                   example: 1
  *                 pagination:
  *                   $ref: '#/components/schemas/Pagination'
  *                 data:
@@ -74,21 +83,25 @@ router.post("/", createOrder);
  *                   items:
  *                     $ref: '#/components/schemas/Order'
  */
+router.post("/", createOrder);
 router.get("/", getOrders);
 
 /**
  * @swagger
  * /api/orders/{id}:
  *   get:
- *     summary: Get a single order by ID (buyer only — cannot view others' orders)
- *     tags: [Orders]
+ *     summary: Get a single order by ID (buyer only)
+ *     tags:
+ *       - Orders
  *     security:
  *       - bearerAuth: []
  *     parameters:
  *       - in: path
  *         name: id
  *         required: true
- *         schema: { type: string, format: uuid }
+ *         schema:
+ *           type: string
+ *           format: uuid
  *     responses:
  *       200:
  *         description: Order found
@@ -97,7 +110,9 @@ router.get("/", getOrders);
  *             schema:
  *               type: object
  *               properties:
- *                 status: { type: integer, example: 1 }
+ *                 status:
+ *                   type: integer
+ *                   example: 1
  *                 data:
  *                   $ref: '#/components/schemas/Order'
  *       404:
@@ -110,14 +125,17 @@ router.get("/:id", getOrder);
  * /api/orders/{id}/cancel:
  *   patch:
  *     summary: Cancel a pending order (buyer only)
- *     tags: [Orders]
+ *     tags:
+ *       - Orders
  *     security:
  *       - bearerAuth: []
  *     parameters:
  *       - in: path
  *         name: id
  *         required: true
- *         schema: { type: string, format: uuid }
+ *         schema:
+ *           type: string
+ *           format: uuid
  *     responses:
  *       200:
  *         description: Order cancelled

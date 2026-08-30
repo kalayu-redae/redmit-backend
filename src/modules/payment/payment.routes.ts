@@ -19,7 +19,8 @@ const router = Router();
  * /api/payments:
  *   post:
  *     summary: Create a payment for an order
- *     tags: [Payments]
+ *     tags:
+ *       - Payments
  *     security:
  *       - bearerAuth: []
  *     requestBody:
@@ -28,14 +29,17 @@ const router = Router();
  *         application/json:
  *           schema:
  *             type: object
- *             required: [orderId, method]
+ *             required:
+ *               - orderId
+ *               - method
  *             properties:
  *               orderId:
  *                 type: string
  *                 format: uuid
  *               method:
  *                 type: string
- *                 enum: [MANUAL_BANK_TRANSFER]
+ *                 enum:
+ *                   - MANUAL_BANK_TRANSFER
  *               bankAccountId:
  *                 type: string
  *                 format: uuid
@@ -48,7 +52,9 @@ const router = Router();
  *             schema:
  *               type: object
  *               properties:
- *                 status: { type: integer, example: 1 }
+ *                 status:
+ *                   type: integer
+ *                   example: 1
  *                 payment:
  *                   $ref: '#/components/schemas/Payment'
  *       400:
@@ -57,15 +63,10 @@ const router = Router();
  *         description: Order does not belong to you
  *       404:
  *         description: Order or bank account not found
- */
-router.post("/", jwtAuthenticate, createPayment);
-
-/**
- * @swagger
- * /api/payments:
  *   get:
  *     summary: List payments — admins see all, regular users see only their own
- *     tags: [Payments]
+ *     tags:
+ *       - Payments
  *     security:
  *       - bearerAuth: []
  *     responses:
@@ -76,7 +77,9 @@ router.post("/", jwtAuthenticate, createPayment);
  *             schema:
  *               type: object
  *               properties:
- *                 status: { type: integer, example: 1 }
+ *                 status:
+ *                   type: integer
+ *                   example: 1
  *                 payments:
  *                   type: array
  *                   items:
@@ -84,6 +87,7 @@ router.post("/", jwtAuthenticate, createPayment);
  *       401:
  *         description: Not authenticated
  */
+router.post("/", jwtAuthenticate, createPayment);
 router.get("/", jwtAuthenticate, getPayments);
 
 /**
@@ -91,14 +95,17 @@ router.get("/", jwtAuthenticate, getPayments);
  * /api/payments/{id}:
  *   get:
  *     summary: Get a single payment by ID (owner or admin)
- *     tags: [Payments]
+ *     tags:
+ *       - Payments
  *     security:
  *       - bearerAuth: []
  *     parameters:
  *       - in: path
  *         name: id
  *         required: true
- *         schema: { type: string, format: uuid }
+ *         schema:
+ *           type: string
+ *           format: uuid
  *     responses:
  *       200:
  *         description: Payment found
@@ -107,7 +114,9 @@ router.get("/", jwtAuthenticate, getPayments);
  *             schema:
  *               type: object
  *               properties:
- *                 status: { type: integer, example: 1 }
+ *                 status:
+ *                   type: integer
+ *                   example: 1
  *                 payment:
  *                   $ref: '#/components/schemas/Payment'
  *       403:
@@ -121,24 +130,29 @@ router.get("/:id", jwtAuthenticate, getPayment);
  * @swagger
  * /api/payments/{id}/manual:
  *   patch:
- *     summary: Submit a transaction reference for a manual bank transfer payment (owner only)
- *     tags: [Payments]
+ *     summary: Submit a transaction reference for a manual bank transfer (owner only)
+ *     tags:
+ *       - Payments
  *     security:
  *       - bearerAuth: []
  *     parameters:
  *       - in: path
  *         name: id
  *         required: true
- *         schema: { type: string, format: uuid }
+ *         schema:
+ *           type: string
+ *           format: uuid
  *     requestBody:
  *       required: true
  *       content:
  *         application/json:
  *           schema:
  *             type: object
- *             required: [transactionReference]
+ *             required:
+ *               - transactionReference
  *             properties:
- *               transactionReference: { type: string }
+ *               transactionReference:
+ *                 type: string
  *     responses:
  *       200:
  *         description: Payment submitted for verification
@@ -156,23 +170,29 @@ router.patch("/:id/manual", jwtAuthenticate, submitManualPayment);
  * /api/payments/{id}/proof:
  *   patch:
  *     summary: Upload a payment proof file (owner only)
- *     tags: [Payments]
+ *     tags:
+ *       - Payments
  *     security:
  *       - bearerAuth: []
  *     parameters:
  *       - in: path
  *         name: id
  *         required: true
- *         schema: { type: string, format: uuid }
+ *         schema:
+ *           type: string
+ *           format: uuid
  *     requestBody:
  *       required: true
  *       content:
  *         multipart/form-data:
  *           schema:
  *             type: object
- *             required: [file]
+ *             required:
+ *               - file
  *             properties:
- *               file: { type: string, format: binary }
+ *               file:
+ *                 type: string
+ *                 format: binary
  *     responses:
  *       200:
  *         description: Proof uploaded
@@ -190,14 +210,17 @@ router.patch("/:id/proof", jwtAuthenticate, upload.single("file"), uploadPayment
  * /api/payments/{id}/verify:
  *   patch:
  *     summary: Verify a manual payment and confirm the order (admin only)
- *     tags: [Payments]
+ *     tags:
+ *       - Payments
  *     security:
  *       - bearerAuth: []
  *     parameters:
  *       - in: path
  *         name: id
  *         required: true
- *         schema: { type: string, format: uuid }
+ *         schema:
+ *           type: string
+ *           format: uuid
  *     responses:
  *       200:
  *         description: Payment verified and order confirmed
@@ -215,23 +238,28 @@ router.patch("/:id/verify", jwtAuthenticate, verifyPayment);
  * /api/payments/{id}/reject:
  *   patch:
  *     summary: Reject a manual payment (admin only)
- *     tags: [Payments]
+ *     tags:
+ *       - Payments
  *     security:
  *       - bearerAuth: []
  *     parameters:
  *       - in: path
  *         name: id
  *         required: true
- *         schema: { type: string, format: uuid }
+ *         schema:
+ *           type: string
+ *           format: uuid
  *     requestBody:
  *       required: true
  *       content:
  *         application/json:
  *           schema:
  *             type: object
- *             required: [rejectionReason]
+ *             required:
+ *               - rejectionReason
  *             properties:
- *               rejectionReason: { type: string }
+ *               rejectionReason:
+ *                 type: string
  *     responses:
  *       200:
  *         description: Payment rejected
@@ -249,14 +277,17 @@ router.patch("/:id/reject", jwtAuthenticate, rejectPayment);
  * /api/payments/{id}/cancel:
  *   patch:
  *     summary: Cancel a payment (owner only)
- *     tags: [Payments]
+ *     tags:
+ *       - Payments
  *     security:
  *       - bearerAuth: []
  *     parameters:
  *       - in: path
  *         name: id
  *         required: true
- *         schema: { type: string, format: uuid }
+ *         schema:
+ *           type: string
+ *           format: uuid
  *     responses:
  *       200:
  *         description: Payment cancelled

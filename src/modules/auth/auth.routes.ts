@@ -11,7 +11,8 @@ const router = Router();
  * /api/auth/register:
  *   post:
  *     summary: Register a new user
- *     tags: [Authentication]
+ *     tags:
+ *       - Authentication
  *     requestBody:
  *       required: true
  *       content:
@@ -26,8 +27,11 @@ const router = Router();
  *             schema:
  *               type: object
  *               properties:
- *                 status: { type: integer, example: 1 }
- *                 message: { type: string }
+ *                 status:
+ *                   type: integer
+ *                   example: 1
+ *                 message:
+ *                   type: string
  *                 data:
  *                   $ref: '#/components/schemas/User'
  *       400:
@@ -42,8 +46,9 @@ router.post("/register", upload.single("avatar"), register);
  * /api/auth/login:
  *   post:
  *     summary: Log in
- *     description: Provide one of `email`, `phone`, or `username` together with `password`.
- *     tags: [Authentication]
+ *     description: Provide one of email, phone, or username together with password.
+ *     tags:
+ *       - Authentication
  *     requestBody:
  *       required: true
  *       content:
@@ -52,14 +57,17 @@ router.post("/register", upload.single("avatar"), register);
  *             $ref: '#/components/schemas/LoginRequest'
  *     responses:
  *       200:
- *         description: Login successful — returns a JWT token and user object
+ *         description: Login successful
  *         content:
  *           application/json:
  *             schema:
  *               type: object
  *               properties:
- *                 status: { type: integer, example: 1 }
- *                 token: { type: string }
+ *                 status:
+ *                   type: integer
+ *                   example: 1
+ *                 token:
+ *                   type: string
  *                 user:
  *                   $ref: '#/components/schemas/User'
  *       400:
@@ -76,14 +84,16 @@ router.post("/login", login);
  * /api/auth/forgot-password:
  *   post:
  *     summary: Request a password reset link
- *     tags: [Authentication]
+ *     tags:
+ *       - Authentication
  *     requestBody:
  *       required: true
  *       content:
  *         application/json:
  *           schema:
  *             type: object
- *             required: [email]
+ *             required:
+ *               - email
  *             properties:
  *               email:
  *                 type: string
@@ -104,14 +114,17 @@ router.post("/forgot-password", forgotPassword);
  * /api/auth/reset-password:
  *   post:
  *     summary: Reset password using the token from the reset link
- *     tags: [Authentication]
+ *     tags:
+ *       - Authentication
  *     requestBody:
  *       required: true
  *       content:
  *         application/json:
  *           schema:
  *             type: object
- *             required: [resetToken, newPassword]
+ *             required:
+ *               - resetToken
+ *               - newPassword
  *             properties:
  *               resetToken:
  *                 type: string
@@ -132,7 +145,8 @@ router.post("/reset-password", resetPassword);
  * /api/auth/me:
  *   get:
  *     summary: Get the authenticated user's profile
- *     tags: [Authentication]
+ *     tags:
+ *       - Authentication
  *     security:
  *       - bearerAuth: []
  *     responses:
@@ -143,20 +157,17 @@ router.post("/reset-password", resetPassword);
  *             schema:
  *               type: object
  *               properties:
- *                 status: { type: integer, example: 1 }
+ *                 status:
+ *                   type: integer
+ *                   example: 1
  *                 user:
  *                   $ref: '#/components/schemas/User'
  *       401:
  *         description: Not authenticated
- */
-router.get("/me", jwtAuthenticate, getMe);
-
-/**
- * @swagger
- * /api/auth/me:
  *   patch:
  *     summary: Update the authenticated user's own profile
- *     tags: [Authentication]
+ *     tags:
+ *       - Authentication
  *     security:
  *       - bearerAuth: []
  *     requestBody:
@@ -183,6 +194,7 @@ router.get("/me", jwtAuthenticate, getMe);
  *       409:
  *         description: Email, phone, or username already in use
  */
+router.get("/me", jwtAuthenticate, getMe);
 router.patch("/me", jwtAuthenticate, upload.single("avatar"), updateMe);
 
 /**
@@ -190,7 +202,8 @@ router.patch("/me", jwtAuthenticate, upload.single("avatar"), updateMe);
  * /api/auth/update-my-password:
  *   patch:
  *     summary: Change the authenticated user's password
- *     tags: [Authentication]
+ *     tags:
+ *       - Authentication
  *     security:
  *       - bearerAuth: []
  *     requestBody:
@@ -199,7 +212,9 @@ router.patch("/me", jwtAuthenticate, upload.single("avatar"), updateMe);
  *         application/json:
  *           schema:
  *             type: object
- *             required: [currentPassword, newPassword]
+ *             required:
+ *               - currentPassword
+ *               - newPassword
  *             properties:
  *               currentPassword:
  *                 type: string
@@ -221,7 +236,8 @@ router.patch("/update-my-password", jwtAuthenticate, updateMyPassword);
  * /api/auth/me/avatar:
  *   delete:
  *     summary: Remove the authenticated user's avatar and revert to default
- *     tags: [Authentication]
+ *     tags:
+ *       - Authentication
  *     security:
  *       - bearerAuth: []
  *     responses:
