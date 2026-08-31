@@ -164,6 +164,44 @@ const options = {
                         createdAt: { type: "string", format: "date-time" },
                     },
                 },
+                // ── Opportunity ──────────────────────────────────────────
+                Opportunity: {
+                    type: "object",
+                    properties: {
+                        id: { type: "string", format: "uuid" },
+                        title: { type: "string" },
+                        slug: { type: "string" },
+                        type: {
+                            type: "string",
+                            enum: [
+                                "SCHOLARSHIP",
+                                "JOB",
+                                "INTERNSHIP",
+                                "FELLOWSHIP",
+                                "COMPETITION",
+                                "GRANT",
+                                "TRAINING",
+                                "VOLUNTEER",
+                            ],
+                        },
+                        description: { type: "string" },
+                        organization: { type: "string", nullable: true },
+                        location: { type: "string", nullable: true },
+                        eligibility: { type: "string", nullable: true },
+                        requirements: { type: "string", nullable: true },
+                        benefits: { type: "string", nullable: true },
+                        sourceUrl: { type: "string", nullable: true },
+                        applicationUrl: { type: "string" },
+                        deadline: { type: "string", format: "date-time", nullable: true },
+                        isPublished: { type: "boolean" },
+                        thumbnail: {
+                            nullable: true,
+                            allOf: [{ $ref: "#/components/schemas/File" }],
+                        },
+                        createdAt: { type: "string", format: "date-time" },
+                        updatedAt: { type: "string", format: "date-time" },
+                    },
+                },
                 // ── Payment ───────────────────────────────────────────────
                 Payment: {
                     type: "object",
