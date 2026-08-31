@@ -1,0 +1,10 @@
+import { Router } from "express";
+import { jwtAuthenticate } from "../../middleware/jwtAuthenticate.js";
+import { createOrder, getOrders, getOrder, cancelOrder } from "./order.controller.js";
+const router = Router();
+router.use(jwtAuthenticate);
+router.post("/", createOrder);
+router.get("/", getOrders);
+router.get("/:id", getOrder);
+router.patch("/:id/cancel", cancelOrder);
+export default router;
