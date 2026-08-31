@@ -1,4 +1,5 @@
 import express, { Request, Response } from "express";
+import cors from "cors";
 import swaggerUi from "swagger-ui-express";
 import { swaggerSpec } from "./config/swagger.js";
 import path from "path";
@@ -18,16 +19,38 @@ import accountRoutes from "./modules/bankAccount/account.routes.js";
 import paymentRoutes from "./modules/payment/payment.routes.js";
 import opportunityRoutes from "./modules/digitalOpportunity/opportunity.routes.js";
 
-
-
 const app = express();
+
+// ── CORS ───────────────────────────────────────────────────────────────────────
+// Allows the frontend (any kalayuredae.com subdomain or localhost) to call the API
+const allowedOrigins = [
+    "http://localhost:3000",
+    "http://localhost:5173",
+    "https://redmit.kalayuredae.com",
+    "https://www.redmit.kalayuredae.com",
+    "https://redmitapi.kalayuredae.com",
+    "https://redmitters.com",
+    "https://www.redmitters.com",
+];
+
+app.use(
+    cors({
+        origin: (origin: string | undefined, callback: (err: Error | null, allow?: boolean) => void) => {
+            // Allow requests with no origin (mobile apps, curl, Swagger UI)
+            if (!origin) return callback(null, true);
+            if (allowedOrigins.includes(origin)) return callback(null, true);
+            callback(new Error(`CORS: origin ${origin} not allowed`));
+        },
+        credentials: true,
+    })
+);
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 app.use("/uploads", express.static(path.join(process.cwd(), "uploads")));
 
-app.get("/", (req: Request, res: Response) => {
+app.get("/", (_req: Request, res: Response) => {
     res.status(200).json({
         status: 1,
         message: "Welcome to Redmit API v1.0.0",
@@ -49,10 +72,6 @@ app.use("/api/payments", paymentRoutes);
 app.use("/api/bank-accounts", accountRoutes);
 app.use("/api/opportunities", opportunityRoutes);
 
-app.use(
-    "/api/docs",
-    swaggerUi.serve,
-    swaggerUi.setup(swaggerSpec)
-);
+app.use("/api/docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
 export default app;
