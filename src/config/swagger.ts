@@ -12,15 +12,11 @@ const options: swaggerJSDoc.Options = {
 
         servers: [
             {
-                url: process.env.API_URL || "http://localhost:5000",
-                description: "API server",
-            },
-            {
                 url: "https://redmitapi.kalayuredae.com",
                 description: "Production",
             },
             {
-                url: "http://localhost:5000",
+                url: process.env.API_URL || "http://localhost:5000",
                 description: "Local development",
             },
         ],
