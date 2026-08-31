@@ -16,6 +16,7 @@ import growthRoutes from "./modules/digitalGrowth/growth.routes.js";
 import orderRoutes from "./modules/order/order.routes.js";
 import accountRoutes from "./modules/bankAccount/account.routes.js";
 import paymentRoutes from "./modules/payment/payment.routes.js";
+import opportunityRoutes from "./modules/digitalOpportunity/opportunity.routes.js";
 
 
 
@@ -46,6 +47,7 @@ app.use("/api/growth", growthRoutes);
 app.use("/api/orders", orderRoutes);
 app.use("/api/payments", paymentRoutes);
 app.use("/api/bank-accounts", accountRoutes);
+app.use("/api/opportunities", opportunityRoutes);
 
 app.use(
     "/api/docs",

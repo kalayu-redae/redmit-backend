@@ -81,6 +81,8 @@ model File {
   digitalGrowthFiles      DigitalGrowth[] @relation("DigitalGrowthFiles")
 
   paymentProof Payment? @relation("PaymentProof")
+
+  opportunityThumbnail Opportunity? @relation("OpportunityThumbnail")
 }
 
 enum FileCategory {
@@ -510,4 +512,49 @@ model Payment {
   @@index([bankAccountId])
   @@index([verifiedById])
   @@index([createdAt])
+}
+
+model Opportunity {
+  id String @id @default(uuid())
+
+  title String
+  slug  String @unique
+
+  type OpportunityType
+  
+  description String
+
+  organization String?
+  location     String?
+
+  eligibility  String?
+  requirements String?
+  benefits     String?
+
+  sourceUrl      String?
+  applicationUrl String
+
+  deadline DateTime?
+
+  thumbnailFileId String? @unique
+  thumbnail       File?   @relation("OpportunityThumbnail", fields: [thumbnailFileId], references: [id], onDelete: SetNull)
+  isPublished     Boolean @default(false)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([type])
+  @@index([deadline])
+  @@index([isPublished])
+}
+
+enum OpportunityType {
+  SCHOLARSHIP
+  JOB
+  INTERNSHIP
+  FELLOWSHIP
+  COMPETITION
+  GRANT
+  TRAINING
+  VOLUNTEER
 }

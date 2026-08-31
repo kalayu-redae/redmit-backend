@@ -29,6 +29,7 @@ const options: swaggerJSDoc.Options = {
             { name: "Orders", description: "Order management" },
             { name: "Payments", description: "Payment processing" },
             { name: "Bank Accounts", description: "Admin — bank account management for manual transfers" },
+            { name: "Opportunities", description: "Scholarships, jobs, internships and other opportunities" },
         ],
 
         components: {
