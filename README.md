@@ -63,20 +63,16 @@ npx prisma generate-
 
         npx prisma migrate deploy
    
-# 1. Pull latest code
-git pull
-
-# 2. Install ALL dependencies (types are now in dependencies, not devDependencies)
-npm install
-
-# 3. Build TypeScript → dist/
+# 1. Build and Push on local machine:
 npm run build
+git add dist/
+git add .gitignore
+git commit -m "build: include dist for server deployment"
+git push
 
-# 4. Run migrations (never use migrate dev on production)
-npx prisma migrate deploy
+# 2. on Server:
+git pull -u origin main
 
-# 5. Generate Prisma client
 npx prisma generate
-
-# 6. Start the server
+npx prisma migrate deploy
 npm start
