@@ -8,9 +8,9 @@ interface SendEmailOptions {
 
 const transporter = nodemailer.createTransport({
   service: "gmail",
-  host: process.env.EMAIL_HOST,
-  port: 587,
-  secure: false,
+  host: process.env.EMAIL_HOST || "smtp.gmail.com",
+  port: Number(process.env.EMAIL_PORT) || 465,
+  secure: true,
   auth: {
     user: process.env.EMAIL_USERNAME,
     pass: process.env.EMAIL_PASSWORD,
