@@ -47,6 +47,8 @@ class FileManager {
             .relative(process.cwd(), targetPath)
             .replace(/\\/g, "/");
 
+        // FILE_BASE_URL already points to the domain root, and relativePath
+        // starts with "uploads/..." which matches the static route /uploads
         const url = `${FILE_BASE_URL}/${relativePath}`;
 
         const savedFile = await prisma.file.create({
