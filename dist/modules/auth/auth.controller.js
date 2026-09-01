@@ -4,7 +4,7 @@ import crypto from "crypto";
 import { prisma } from "../../config/prisma.js";
 import catchAsync from "../../utils/catchAsync.js";
 import AppError from "../../utils/appError.js";
-import { sendPasswordResetLink } from "../../utils/emailUtils.js";
+import { sendPasswordResetLink, sendWelcomeEmail } from "../../utils/emailUtils.js";
 import FileManager from "../../utils/file/file.manager.js";
 import { registerSchema, loginSchema } from "./auth.validation.js";
 const signInToken = (user) => {
@@ -46,6 +46,13 @@ export const register = catchAsync(async (req, res, next) => {
         },
     });
     const avatarUrl = user.avatar?.url || `${req.protocol}://${req.get("host")}/uploads/defaults/default-avatar.png`;
+    // Send welcome email — don't block registration if it fails
+    try {
+        await sendWelcomeEmail(user.email, user.fullName || "", user.username);
+    }
+    catch {
+        // email failure is non-fatal
+    }
     return res.status(201).json({
         status: 1,
         message: "User registered successfully",
