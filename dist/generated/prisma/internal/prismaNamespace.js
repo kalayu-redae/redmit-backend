@@ -77,11 +77,19 @@ export const ModelName = {
     OtherAsset: 'OtherAsset',
     DigitalAccess: 'DigitalAccess',
     DigitalGrowth: 'DigitalGrowth',
+    DvAssistance: 'DvAssistance',
     Order: 'Order',
     OrderItem: 'OrderItem',
     BankAccount: 'BankAccount',
     Payment: 'Payment',
-    Opportunity: 'Opportunity'
+    Opportunity: 'Opportunity',
+    DVApplication: 'DVApplication',
+    DVApplicantDetails: 'DVApplicantDetails',
+    DVFamilyMember: 'DVFamilyMember',
+    DVDocument: 'DVDocument',
+    DVApplicationReview: 'DVApplicationReview',
+    DVSubmissionRecord: 'DVSubmissionRecord',
+    DVOfficialPayment: 'DVOfficialPayment'
 };
 /**
  * Enums
@@ -228,6 +236,21 @@ export const DigitalGrowthScalarFieldEnum = {
     createdAt: 'createdAt',
     updatedAt: 'updatedAt'
 };
+export const DvAssistanceScalarFieldEnum = {
+    id: 'id',
+    providerId: 'providerId',
+    name: 'name',
+    slug: 'slug',
+    type: 'type',
+    description: 'description',
+    price: 'price',
+    currency: 'currency',
+    thumbnailId: 'thumbnailId',
+    details: 'details',
+    isActive: 'isActive',
+    createdAt: 'createdAt',
+    updatedAt: 'updatedAt'
+};
 export const OrderScalarFieldEnum = {
     id: 'id',
     orderNumber: 'orderNumber',
@@ -249,6 +272,7 @@ export const OrderItemScalarFieldEnum = {
     digitalAssetId: 'digitalAssetId',
     digitalAccessId: 'digitalAccessId',
     digitalGrowthId: 'digitalGrowthId',
+    dvAssistanceId: 'dvAssistanceId',
     name: 'name',
     quantity: 'quantity',
     unitPrice: 'unitPrice',
@@ -308,6 +332,107 @@ export const OpportunityScalarFieldEnum = {
     deadline: 'deadline',
     thumbnailFileId: 'thumbnailFileId',
     isPublished: 'isPublished',
+    createdAt: 'createdAt',
+    updatedAt: 'updatedAt'
+};
+export const DVApplicationScalarFieldEnum = {
+    id: 'id',
+    userId: 'userId',
+    dvYear: 'dvYear',
+    status: 'status',
+    orderId: 'orderId',
+    serviceFee: 'serviceFee',
+    officialFeeAmount: 'officialFeeAmount',
+    currency: 'currency',
+    customerNotes: 'customerNotes',
+    staffNotes: 'staffNotes',
+    createdAt: 'createdAt',
+    updatedAt: 'updatedAt',
+    closedAt: 'closedAt'
+};
+export const DVApplicantDetailsScalarFieldEnum = {
+    id: 'id',
+    applicationId: 'applicationId',
+    givenNameEnc: 'givenNameEnc',
+    middleNameEnc: 'middleNameEnc',
+    familyNameEnc: 'familyNameEnc',
+    dateOfBirthEnc: 'dateOfBirthEnc',
+    gender: 'gender',
+    cityOfBirthEnc: 'cityOfBirthEnc',
+    countryOfBirthEnc: 'countryOfBirthEnc',
+    countryOfEligibilityEnc: 'countryOfEligibilityEnc',
+    emailEnc: 'emailEnc',
+    phoneEnc: 'phoneEnc',
+    addressEnc: 'addressEnc',
+    cityEnc: 'cityEnc',
+    regionEnc: 'regionEnc',
+    postalCodeEnc: 'postalCodeEnc',
+    countryEnc: 'countryEnc',
+    maritalStatus: 'maritalStatus',
+    educationLevel: 'educationLevel',
+    passportNumberEnc: 'passportNumberEnc',
+    passportCountryEnc: 'passportCountryEnc',
+    passportExpiryEnc: 'passportExpiryEnc',
+    createdAt: 'createdAt',
+    updatedAt: 'updatedAt'
+};
+export const DVFamilyMemberScalarFieldEnum = {
+    id: 'id',
+    applicationId: 'applicationId',
+    relationship: 'relationship',
+    givenNameEnc: 'givenNameEnc',
+    middleNameEnc: 'middleNameEnc',
+    familyNameEnc: 'familyNameEnc',
+    dateOfBirthEnc: 'dateOfBirthEnc',
+    gender: 'gender',
+    cityOfBirthEnc: 'cityOfBirthEnc',
+    countryOfBirthEnc: 'countryOfBirthEnc',
+    createdAt: 'createdAt',
+    updatedAt: 'updatedAt'
+};
+export const DVDocumentScalarFieldEnum = {
+    id: 'id',
+    applicationId: 'applicationId',
+    familyMemberId: 'familyMemberId',
+    fileId: 'fileId',
+    type: 'type',
+    status: 'status',
+    reviewNotesEnc: 'reviewNotesEnc',
+    reviewedAt: 'reviewedAt',
+    createdAt: 'createdAt',
+    updatedAt: 'updatedAt'
+};
+export const DVApplicationReviewScalarFieldEnum = {
+    id: 'id',
+    applicationId: 'applicationId',
+    reviewerId: 'reviewerId',
+    status: 'status',
+    notesEnc: 'notesEnc',
+    createdAt: 'createdAt'
+};
+export const DVSubmissionRecordScalarFieldEnum = {
+    id: 'id',
+    applicationId: 'applicationId',
+    status: 'status',
+    confirmationNumberEnc: 'confirmationNumberEnc',
+    submittedAt: 'submittedAt',
+    confirmedAt: 'confirmedAt',
+    handledByUserId: 'handledByUserId',
+    notesEnc: 'notesEnc',
+    createdAt: 'createdAt',
+    updatedAt: 'updatedAt'
+};
+export const DVOfficialPaymentScalarFieldEnum = {
+    id: 'id',
+    applicationId: 'applicationId',
+    status: 'status',
+    amount: 'amount',
+    currency: 'currency',
+    paymentMethod: 'paymentMethod',
+    transactionRef: 'transactionRef',
+    paidAt: 'paidAt',
+    failureReasonEnc: 'failureReasonEnc',
+    recordedByUserId: 'recordedByUserId',
     createdAt: 'createdAt',
     updatedAt: 'updatedAt'
 };

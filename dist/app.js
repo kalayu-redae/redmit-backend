@@ -15,6 +15,7 @@ import orderRoutes from "./modules/order/order.routes.js";
 import accountRoutes from "./modules/bankAccount/account.routes.js";
 import paymentRoutes from "./modules/payment/payment.routes.js";
 import opportunityRoutes from "./modules/digitalOpportunity/opportunity.routes.js";
+import dvApplicationRoutes from "./modules/dvApplication/dvApplication.routes.js";
 const app = express();
 // ── CORS ───────────────────────────────────────────────────────────────────────
 // Allows the frontend (any kalayuredae.com subdomain or localhost) to call the API
@@ -59,5 +60,6 @@ app.use("/api/orders", orderRoutes);
 app.use("/api/payments", paymentRoutes);
 app.use("/api/bank-accounts", accountRoutes);
 app.use("/api/opportunities", opportunityRoutes);
+app.use("/api/dv-applications", dvApplicationRoutes);
 app.use("/api/docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 export default app;
