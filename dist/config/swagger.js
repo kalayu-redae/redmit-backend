@@ -30,6 +30,7 @@ const options = {
             { name: "Payments", description: "Payment processing" },
             { name: "Bank Accounts", description: "Admin — bank account management for manual transfers" },
             { name: "Opportunities", description: "Scholarships, jobs, internships and other opportunities" },
+            { name: "DV Applications", description: "Diversity Visa lottery application management" },
         ],
         components: {
             securitySchemes: {
@@ -184,6 +185,66 @@ const options = {
                         createdAt: { type: "string", format: "date-time" },
                     },
                 },
+                // ── DV Application ────────────────────────────────────────
+                DVApplicationStatus: {
+                    type: "string",
+                    enum: ["REQUESTED", "UNDER_REVIEW", "AWAITING_PAYMENT", "PAID", "PROCESSING", "SUBMITTED", "COMPLETED", "CANCELLED"],
+                },
+                DVPersonType: {
+                    type: "string",
+                    enum: ["APPLICANT", "SPOUSE", "CHILD"],
+                },
+                DVDocumentType: {
+                    type: "string",
+                    enum: ["APPLICANT_PHOTO", "SPOUSE_PHOTO", "CHILD_PHOTO", "PASSPORT_PHOTO", "BIRTH_CERTIFICATE_PHOTO", "OFFICIAL_PAYMENT_RECEIPT", "CONFIRMATION_DOCUMENT", "OTHER"],
+                },
+                DVDocument: {
+                    type: "object",
+                    properties: {
+                        id: { type: "string", format: "uuid" },
+                        applicationId: { type: "string", format: "uuid" },
+                        familyMemberId: { type: "string", format: "uuid", nullable: true },
+                        fileId: { type: "string", format: "uuid" },
+                        type: { $ref: "#/components/schemas/DVDocumentType" },
+                        createdAt: { type: "string", format: "date-time" },
+                    },
+                },
+                DVPerson: {
+                    type: "object",
+                    properties: {
+                        id: { type: "string", format: "uuid" },
+                        applicationId: { type: "string", format: "uuid" },
+                        type: { $ref: "#/components/schemas/DVPersonType" },
+                        detailsEncrypted: { type: "string", description: "Encrypted JSON blob containing personal details" },
+                        createdAt: { type: "string", format: "date-time" },
+                        updatedAt: { type: "string", format: "date-time" },
+                    },
+                },
+                DVApplication: {
+                    type: "object",
+                    properties: {
+                        id: { type: "string", format: "uuid" },
+                        userId: { type: "string", format: "uuid" },
+                        providerId: { type: "string", format: "uuid" },
+                        name: { type: "string", example: "DV Application Assistance" },
+                        description: { type: "string", nullable: true },
+                        price: { type: "number", example: 150.00 },
+                        serviceFee: { type: "number", example: 25.00 },
+                        currency: { type: "string", example: "USD" },
+                        dvYear: { type: "integer", example: 2026 },
+                        status: { $ref: "#/components/schemas/DVApplicationStatus" },
+                        isActive: { type: "boolean" },
+                        confirmationNumberEncrypted: { type: "string", nullable: true },
+                        submittedAt: { type: "string", format: "date-time", nullable: true },
+                        orderId: { type: "string", format: "uuid", nullable: true },
+                        thumbnailId: { type: "string", format: "uuid", nullable: true },
+                        thumbnail: { nullable: true, allOf: [{ $ref: "#/components/schemas/File" }] },
+                        familyMembers: { type: "array", items: { $ref: "#/components/schemas/DVPerson" } },
+                        documents: { type: "array", items: { $ref: "#/components/schemas/DVDocument" } },
+                        createdAt: { type: "string", format: "date-time" },
+                        updatedAt: { type: "string", format: "date-time" },
+                    },
+                },
                 // ── Opportunity ───────────────────────────────────────────
                 Opportunity: {
                     type: "object",
@@ -213,6 +274,9 @@ const options = {
             },
         },
     },
-    apis: ["./src/modules/**/*.routes.ts"],
+    apis: [
+        "./src/modules/**/*.routes.ts", // tsx dev
+        "./dist/modules/**/*.routes.js", // compiled production
+    ],
 };
 export const swaggerSpec = swaggerJSDoc(options);

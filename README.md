@@ -68,7 +68,7 @@ npm run build
 git add dist/
 git add .gitignore
 git commit -m "build: include dist for server deployment"
-git push
+git push -u origin main
 
 # 2. on Server:
 git pull -u origin main
