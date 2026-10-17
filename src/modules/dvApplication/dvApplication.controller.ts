@@ -4,7 +4,7 @@ import { prisma } from "../../config/prisma.js";
 import catchAsync from "../../utils/catchAsync.js";
 import AppError from "../../utils/appError.js";
 import FileManager from "../../utils/file/file.manager.js";
-import { DVApplicationStatus } from "@prisma/client";
+import { DVApplicationStatus } from "../../generated/prisma/enums.js";
 
 const isAdmin = (req: Request) => req.user?.role === "ADMIN";
 
@@ -16,12 +16,10 @@ const getUploadedFiles = (req: Request) =>
 const validateFees = (
     price: unknown,
     serviceFee: unknown,
-    registrationFee: unknown
 ) => {
     for (const [name, value] of [
         ["price", price],
         ["serviceFee", serviceFee],
-        ["registrationFee", registrationFee],
     ] as const) {
         if (
             value !== undefined &&
@@ -54,7 +52,6 @@ export const createDVApplication = catchAsync(
             price,
             currency,
             serviceFee,
-            registrationFee,
             dvYear,
             details,
         } = req.body;
@@ -64,18 +61,17 @@ export const createDVApplication = catchAsync(
             !name ||
             price === undefined ||
             serviceFee === undefined ||
-            registrationFee === undefined ||
             dvYear === undefined
         ) {
             return next(
                 new AppError(
-                    "Provider, name, price, service fee, registration fee and DV year are required",
+                    "Provider, name, price, service fee and DV year are required",
                     400
                 )
             );
         }
 
-        validateFees(price, serviceFee, registrationFee);
+        validateFees(price, serviceFee);
 
         if (!Number.isInteger(Number(dvYear))) {
             return next(new AppError("DV year must be an integer", 400));
@@ -109,7 +105,6 @@ export const createDVApplication = catchAsync(
                 description,
                 price: Number(price),
                 serviceFee: Number(serviceFee),
-                registrationFee: Number(registrationFee),
                 currency: currency || "USD",
                 dvYear: Number(dvYear),
                 ...(details !== undefined && { details }),
@@ -173,12 +168,12 @@ export const getDVApplications = catchAsync(
                 where,
                 include: {
                     thumbnail: true,
-                    people: true,
+                    familyMembers: true,
                     documents: {
                         select: {
                             id: true,
                             type: true,
-                            personId: true,
+                            familyMemberId: true,
                             fileId: true,
                             createdAt: true,
                         },
@@ -216,16 +211,18 @@ export const getDVApplication = catchAsync(
             return next(new AppError("Authentication required", 401));
         }
 
+        const id = String(req.params.id);
+
         const application = await prisma.dVApplication.findUnique({
-            where: { id: req.params.id },
+            where: { id },
             include: {
                 thumbnail: true,
-                people: true,
+                familyMembers: true,
                 documents: {
                     select: {
                         id: true,
                         type: true,
-                        personId: true,
+                        familyMemberId: true,
                         fileId: true,
                         createdAt: true,
                     },
@@ -264,13 +261,12 @@ export const updateDVApplication = catchAsync(
             price,
             currency,
             serviceFee,
-            registrationFee,
             dvYear,
             details,
             isActive,
         } = req.body;
 
-        validateFees(price, serviceFee, registrationFee);
+        validateFees(price, serviceFee);
 
         if (
             dvYear !== undefined &&
@@ -280,7 +276,7 @@ export const updateDVApplication = catchAsync(
         }
 
         const existing = await prisma.dVApplication.findUnique({
-            where: { id: req.params.id },
+            where: { id: String(req.params.id) },
             select: { id: true },
         });
 
@@ -299,7 +295,7 @@ export const updateDVApplication = catchAsync(
         }
 
         const application = await prisma.dVApplication.update({
-            where: { id: req.params.id },
+            where: { id: String(req.params.id) },
             data: {
                 ...(name !== undefined && { name: String(name).trim() }),
                 ...(description !== undefined && { description }),
@@ -307,9 +303,6 @@ export const updateDVApplication = catchAsync(
                 ...(currency !== undefined && { currency }),
                 ...(serviceFee !== undefined && {
                     serviceFee: Number(serviceFee),
-                }),
-                ...(registrationFee !== undefined && {
-                    registrationFee: Number(registrationFee),
                 }),
                 ...(dvYear !== undefined && { dvYear: Number(dvYear) }),
                 ...(details !== undefined && { details }),
@@ -348,7 +341,7 @@ export const updateDVApplicationStatus = catchAsync(
         }
 
         const existing = await prisma.dVApplication.findUnique({
-            where: { id: req.params.id },
+            where: { id: String(req.params.id) },
             select: { id: true },
         });
 
@@ -357,7 +350,7 @@ export const updateDVApplicationStatus = catchAsync(
         }
 
         const application = await prisma.dVApplication.update({
-            where: { id: req.params.id },
+            where: { id: String(req.params.id) },
             data: {
                 status: status as DVApplicationStatus,
                 ...(status === "SUBMITTED" && {
@@ -385,7 +378,7 @@ export const deleteDVApplication = catchAsync(
         }
 
         const application = await prisma.dVApplication.findUnique({
-            where: { id: req.params.id },
+            where: { id: String(req.params.id) },
             select: { id: true },
         });
 
@@ -394,7 +387,7 @@ export const deleteDVApplication = catchAsync(
         }
 
         await prisma.dVApplication.delete({
-            where: { id: req.params.id },
+            where: { id: String(req.params.id) },
         });
 
         return res.status(200).json({
