@@ -35,12 +35,16 @@ model User {
   avatar          File?            @relation("UserAvatar", fields: [avatarFileId], references: [id], onDelete: SetNull)
   digitalProducts DigitalProduct[]
   digitalAssets   DigitalAsset[]
-  digitalAccesses DigitalAccess[]
-  digitalGrowths  DigitalGrowth[]
+  digitalAccesses    DigitalAccess[]
+  digitalGrowths     DigitalGrowth[]
 
   orders           Order[]   @relation("BuyerOrders")
   payments         Payment[] @relation("UserPayments")
   verifiedPayments Payment[] @relation("PaymentVerifier")
+
+dvApplications         DVApplication[] @relation("DVApplicationCustomer")
+providedDvApplications DVApplication[] @relation("DVApplicationProvider")
+
 }
 
 enum UserRole {
@@ -77,12 +81,16 @@ model File {
   digitalAccessThumbnails DigitalAccess[] @relation("DigitalAccessThumbnail")
   digitalAccessFiles      DigitalAccess[] @relation("DigitalAccessFiles")
 
-  digitalGrowthThumbnails DigitalGrowth[] @relation("DigitalGrowthThumbnail")
-  digitalGrowthFiles      DigitalGrowth[] @relation("DigitalGrowthFiles")
+  digitalGrowthThumbnails    DigitalGrowth[] @relation("DigitalGrowthThumbnail")
+  digitalGrowthFiles         DigitalGrowth[] @relation("DigitalGrowthFiles")
 
   paymentProof Payment? @relation("PaymentProof")
 
   opportunityThumbnail Opportunity? @relation("OpportunityThumbnail")
+
+  dvApplicationThumbnails DVApplication[] @relation("DVApplicationThumbnail")
+  dvApplicationFiles      DVApplication[] @relation("DVApplicationFiles")
+  dvDocuments              DVDocument[]
 }
 
 enum FileCategory {
@@ -342,6 +350,7 @@ enum OrderItemType {
   DIGITAL_ASSET
   DIGITAL_ACCESS
   DIGITAL_GROWTH
+  DV_ASSISTANCE
 }
 
 enum OrderStatus {
@@ -374,6 +383,7 @@ model Order {
   updatedAt DateTime @updatedAt
 
   payments Payment[]
+  dvApplication DVApplication?
 
   @@index([buyerId])
   @@index([status])
@@ -400,6 +410,9 @@ model OrderItem {
   digitalGrowthId String?
   digitalGrowth   DigitalGrowth? @relation(fields: [digitalGrowthId], references: [id], onDelete: SetNull)
 
+  dvApplicationId String?
+  dvApplication   DVApplication? @relation(fields: [dvApplicationId],references: [id],onDelete: SetNull)
+
   name       String
   quantity   Int     @default(1)
   unitPrice  Decimal @db.Decimal(12, 2)
@@ -414,6 +427,7 @@ model OrderItem {
   @@index([digitalAssetId])
   @@index([digitalAccessId])
   @@index([digitalGrowthId])
+  @@index([dvApplicationId])
 }
 
 enum PaymentMethod {
@@ -557,4 +571,115 @@ enum OpportunityType {
   GRANT
   TRAINING
   VOLUNTEER
+}
+
+enum DVApplicationStatus {
+  REQUESTED
+  UNDER_REVIEW
+  AWAITING_PAYMENT
+  PAID
+  PROCESSING
+  SUBMITTED
+  COMPLETED
+  CANCELLED
+}
+
+enum DVPersonType {
+  APPLICANT
+  SPOUSE
+  CHILD
+}
+
+enum DVDocumentType {
+  APPLICANT_PHOTO
+  SPOUSE_PHOTO
+  CHILD_PHOTO
+  PASSPORT_PHOTO
+  BIRTH_CERTIFICATE_PHOTO
+  OFFICIAL_PAYMENT_RECEIPT
+  CONFIRMATION_DOCUMENT
+  OTHER
+}
+
+model DVApplication {
+  id String @id @default(uuid())
+
+  userId     String
+  providerId String
+
+  user     User @relation("DVApplicationCustomer", fields: [userId], references: [id])
+  provider User @relation("DVApplicationProvider", fields: [providerId], references: [id])
+
+  name        String  @default("DV Application Assistance")
+  description String?
+
+  price    Decimal @db.Decimal(12, 2)
+  currency String  @default("USD")
+
+  thumbnailId String?
+  thumbnail   File?   @relation("DVApplicationThumbnail", fields: [thumbnailId], references: [id], onDelete: SetNull)
+
+  files   File[] @relation("DVApplicationFiles")
+  details Json?
+
+  isActive Boolean @default(true)
+
+  dvYear Int
+  status DVApplicationStatus @default(REQUESTED)
+
+  confirmationNumberEncrypted String? @db.Text
+
+  submittedAt DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  orderId String? @unique
+  order   Order?  @relation(fields: [orderId], references: [id], onDelete: SetNull)
+
+  orderItems OrderItem[]
+  people     DVPerson[]
+  documents  DVDocument[]
+
+  @@index([userId])
+  @@index([providerId])
+  @@index([dvYear])
+  @@index([status])
+  @@index([isActive])
+  @@index([createdAt])
+}
+
+model DVPerson {
+  id            String       @id @default(uuid())
+  applicationId String
+  type          DVPersonType
+
+  detailsEncrypted String @db.Text
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  application DVApplication @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+  documents   DVDocument[]
+
+  @@index([applicationId])
+  @@index([type])
+}
+
+model DVDocument {
+  id            String  @id @default(uuid())
+  applicationId String
+  personId      String?
+  fileId        String
+
+  type      DVDocumentType
+  createdAt DateTime       @default(now())
+
+  application DVApplication  @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+  person      DVPerson?      @relation(fields: [personId], references: [id], onDelete: SetNull)
+  file        File           @relation(fields: [fileId], references: [id], onDelete: Cascade)
+
+  @@unique([applicationId, fileId])
+  @@index([applicationId])
+  @@index([personId])
+  @@index([type])
 }
