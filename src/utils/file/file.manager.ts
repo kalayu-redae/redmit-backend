@@ -60,7 +60,7 @@ class FileManager {
                 mimeType: file.mimetype,
                 size: file.size,
                 category,
-                isPublic,
+                visibility: isPublic ? "PUBLIC" : "PRIVATE",
             },
         });
 

@@ -22,7 +22,7 @@ npx prisma generate-
     14. Security & optimization
 
 # c. work flows
-    1. Design models & Prisma schema ( on schema.prisma)
+    1. Design models & Prisma schema ( on schema.prisma)(npx prisma validate)
     2. Migration (npx prisma migrate dev --name create_users)
     3. Prisma generate (npx prisma generate)
     4. Seeder(npx prisma db seed)(on seed.ts)

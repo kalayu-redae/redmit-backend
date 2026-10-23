@@ -18,7 +18,8 @@ import orderRoutes from "./modules/order/order.routes.js";
 import accountRoutes from "./modules/bankAccount/account.routes.js";
 import paymentRoutes from "./modules/payment/payment.routes.js";
 import opportunityRoutes from "./modules/digitalOpportunity/opportunity.routes.js";
-import dvApplicationRoutes from "./modules/dvApplication/dvApplication.routes.js";
+import dvApplicationRoutes from "./modules/dvApplication/dvProgram.routes.js";
+import dvProgramRoutes from "./modules/dvApplication/dvProgram.routes.js";
 
 const app = express();
 
@@ -26,6 +27,7 @@ const app = express();
 // Allows the frontend (any kalayuredae.com subdomain or localhost) to call the API
 const allowedOrigins = [
     "http://localhost:3000",
+    "http://localhost:5000",
     "http://localhost:5173",
     "https://redmit.kalayuredae.com",
     "https://www.redmit.kalayuredae.com",
@@ -33,7 +35,9 @@ const allowedOrigins = [
     "https://redmitters.com",
     "https://www.redmitters.com",
 ];
-
+(BigInt.prototype as any).toJSON = function () {
+    return this.toString();
+};
 app.use(
     cors({
         origin: (origin: string | undefined, callback: (err: Error | null, allow?: boolean) => void) => {
@@ -72,7 +76,10 @@ app.use("/api/orders", orderRoutes);
 app.use("/api/payments", paymentRoutes);
 app.use("/api/bank-accounts", accountRoutes);
 app.use("/api/opportunities", opportunityRoutes);
-app.use("/api/dv-applications", dvApplicationRoutes);
+app.use("/api/dv-programs", dvProgramRoutes);
+// app.use("/api/dv-applications", dvApplicationRoutes);
+
+
 
 app.use("/api/docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 

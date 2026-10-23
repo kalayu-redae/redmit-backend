@@ -364,6 +364,149 @@ async function main() {
 
     console.log("✅ Orders:", order1.orderNumber, order2.orderNumber);
 
+
+    // ── 8.5. DV APPLICATION REQUESTS ───────────────────────────────────────────
+
+
+    // Seed DV Programs
+    const dvPrograms = [
+        {
+            dvYear: 2027,
+            startDate: new Date("2025-10-01T00:00:00.000Z"),
+            endDate: new Date("2025-11-04T00:00:00.000Z"),
+            isActive: true,
+            acceptingRequests: true,
+            paymentAssistanceFee: 150,
+            formFillingFee: 500,
+            internationalPaymentFee: 0,
+            currency: "ETB",
+        },
+    ];
+
+    for (const program of dvPrograms) {
+        await prisma.dVProgram.upsert({
+            where: { dvYear: program.dvYear },
+            update: {
+                startDate: program.startDate,
+                endDate: program.endDate,
+                paymentAssistanceFee: program.paymentAssistanceFee,
+                formFillingFee: program.formFillingFee,
+                internationalPaymentFee: program.internationalPaymentFee,
+                currency: program.currency,
+            },
+            create: program,
+        });
+    }
+
+    console.log("DV programs seeded successfully");
+
+    const dvProgram2027 = await prisma.dVProgram.findUniqueOrThrow({
+        where: { dvYear: 2027 },
+    });
+
+    // Request 1: Payment assistance only
+    const dvPaymentOrder = await prisma.order.upsert({
+        where: { orderNumber: "ORD-SEED-DV-000001" },
+        update: {},
+        create: {
+            orderNumber: "ORD-SEED-DV-000001",
+            buyerId: buyer.id,
+            subtotal: 150,
+            discount: 0,
+            tax: 0,
+            total: 150,
+            currency: "ETB",
+            status: "PENDING",
+            items: {
+                create: [
+                    {
+                        type: "DV_APPLICATION_REQUEST",
+                        name: "DV Payment Assistance",
+                        quantity: 1,
+                        unitPrice: 150,
+                        totalPrice: 150,
+                        currency: "ETB",
+                    },
+                ],
+            },
+        },
+    });
+
+    const dvPaymentRequest = await prisma.dVApplicationRequest.upsert({
+        where: { orderId: dvPaymentOrder.id },
+        update: {},
+        create: {
+            userId: buyer.id,
+            requestType: "PAYMENT_ASSISTANCE",
+            status: "PENDING_PAYMENT",
+            needsInternationalPayment: true,
+            serviceFee: 150,
+            internationalPaymentFee: 0,
+            currency: "ETB",
+            orderId: dvPaymentOrder.id,
+        },
+    });
+
+    // Request 2: Form-filling assistance
+    const dvFormOrder = await prisma.order.upsert({
+        where: { orderNumber: "ORD-SEED-DV-000002" },
+        update: {},
+        create: {
+            orderNumber: "ORD-SEED-DV-000002",
+            buyerId: buyer.id,
+            subtotal: 500,
+            discount: 0,
+            tax: 0,
+            total: 500,
+            currency: "ETB",
+            status: "PENDING",
+            items: {
+                create: [
+                    {
+                        type: "DV_APPLICATION_REQUEST",
+                        name: "DV Form-Filling Assistance",
+                        quantity: 1,
+                        unitPrice: 500,
+                        totalPrice: 500,
+                        currency: "ETB",
+                    },
+                ],
+            },
+        },
+    });
+
+    const dvFormRequest = await prisma.dVApplicationRequest.upsert({
+        where: { orderId: dvFormOrder.id },
+        update: {},
+        create: {
+            userId: buyer.id,
+            requestType: "FORM_FILLING",
+            status: "PENDING_PAYMENT",
+            needsInternationalPayment: false,
+            applicantDetails: {
+                applicant: {
+                    firstName: "Sample",
+                    lastName: "Applicant",
+                    email: "sample@example.com",
+                    countryOfBirth: "Ethiopia",
+                },
+                spouse: null,
+                children: [],
+            },
+            serviceFee: 500,
+            internationalPaymentFee: 0,
+            currency: "ETB",
+            orderId: dvFormOrder.id,
+        },
+    });
+
+    console.log(
+        "✅ DV Application Requests:",
+        dvPaymentRequest.id,
+        dvFormRequest.id,
+    );
+
+
     // ── 9. PAYMENTS ────────────────────────────────────────────────────────────
     const payment1 = await prisma.payment.upsert({
         where: { paymentNumber: "PAY-SEED-000001" },
