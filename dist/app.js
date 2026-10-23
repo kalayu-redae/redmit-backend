@@ -15,13 +15,15 @@ import orderRoutes from "./modules/order/order.routes.js";
 import accountRoutes from "./modules/bankAccount/account.routes.js";
 import paymentRoutes from "./modules/payment/payment.routes.js";
 import opportunityRoutes from "./modules/digitalOpportunity/opportunity.routes.js";
-import dvApplicationRoutes from "./modules/dvApplication/dvApplication.routes.js";
+import dvProgramRoutes from "./modules/dvApplication/dvProgram.routes.js";
+import dvApplicationRequestRoutes from "./modules/dvApplication/dvApplicationRequest.routes.js";
 import dvApplicationDocumentRoutes from "./modules/dvApplication/dvApplicationDocument.routes.js";
 const app = express();
 // ── CORS ───────────────────────────────────────────────────────────────────────
 // Allows the frontend (any kalayuredae.com subdomain or localhost) to call the API
 const allowedOrigins = [
     "http://localhost:3000",
+    "http://localhost:5000",
     "http://localhost:5173",
     "https://redmit.kalayuredae.com",
     "https://www.redmit.kalayuredae.com",
@@ -29,6 +31,9 @@ const allowedOrigins = [
     "https://redmitters.com",
     "https://www.redmitters.com",
 ];
+BigInt.prototype.toJSON = function () {
+    return this.toString();
+};
 app.use(cors({
     origin: (origin, callback) => {
         // Allow requests with no origin (mobile apps, curl, Swagger UI)
@@ -57,21 +62,12 @@ app.use("/api/products", productRoutes);
 app.use("/api/assets", assetRoutes);
 app.use("/api/access", accessRoutes);
 app.use("/api/growth", growthRoutes);
+app.use("/api/opportunities", opportunityRoutes);
+app.use("/api/dv-programs", dvProgramRoutes);
+app.use("/api/dv-application-requests", dvApplicationRequestRoutes);
+app.use("/api/dv-application-requests", dvApplicationDocumentRoutes);
 app.use("/api/orders", orderRoutes);
 app.use("/api/payments", paymentRoutes);
 app.use("/api/bank-accounts", accountRoutes);
-app.use("/api/opportunities", opportunityRoutes);
-app.use("/api/dv-applications", dvApplicationRoutes);
-
-app.use(
-    "/api/docs",
-    swaggerUi.serve,
-    swaggerUi.setup(swaggerSpec, {
-        swaggerOptions: {
-            docExpansion: "none",
-            deepLinking: false,
-        },
-    }),
-);
-
+app.use("/api/docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 export default app;
