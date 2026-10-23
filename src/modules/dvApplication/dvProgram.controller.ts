@@ -51,7 +51,7 @@ export const createDVProgram = catchAsync(async (req: Request, res: Response, ne
         return next(new AppError("Fees must be valid non-negative numbers", 400));
     }
 
-    const existingProgram = await prisma.DVProgram.findUnique({
+    const existingProgram = await prisma.dVProgram.findUnique({
         where: { dvYear: year },
     });
 
@@ -70,7 +70,7 @@ export const createDVProgram = catchAsync(async (req: Request, res: Response, ne
     }
 
     try {
-        const program = await prisma.DVProgram.create({
+        const program = await prisma.dVProgram.create({
             data: {
                 dvYear: year,
                 startDate: parsedStartDate,
@@ -134,7 +134,7 @@ export const getDVPrograms = catchAsync(async (req: Request, res: Response, next
     }
 
     const [programs, total] = await prisma.$transaction([
-        prisma.DVProgram.findMany({
+        prisma.dVProgram.findMany({
             where,
             skip,
             take: limit,
@@ -144,7 +144,7 @@ export const getDVPrograms = catchAsync(async (req: Request, res: Response, next
                 _count: { select: { requests: true } },
             },
         }),
-        prisma.DVProgram.count({ where }),
+        prisma.dVProgram.count({ where }),
     ]);
 
     return res.status(200).json({
@@ -161,8 +161,8 @@ export const getDVPrograms = catchAsync(async (req: Request, res: Response, next
 });
 
 export const getDVProgram = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
-    const program = await prisma.DVProgram.findUnique({
-        where: { id: req.params.id },
+    const program = await prisma.dVProgram.findUnique({
+        where: { id: String(req.params.id) },
         include: {
             thumbnail: true,
             _count: { select: { requests: true } },
@@ -186,8 +186,8 @@ export const updateDVProgram = catchAsync(async (req: Request, res: Response, ne
     if (!req.user?.id) return next(new AppError("Authentication required", 401));
     if (!isAdmin(req)) return next(new AppError("Admin access required", 403));
 
-    const existingProgram = await prisma.DVProgram.findUnique({
-        where: { id: req.params.id },
+    const existingProgram = await prisma.dVProgram.findUnique({
+        where: { id: String(req.params.id) },
     });
 
     if (!existingProgram) return next(new AppError("DV program not found", 404));
@@ -211,7 +211,7 @@ export const updateDVProgram = catchAsync(async (req: Request, res: Response, ne
             return next(new AppError("DV year must be a valid year", 400));
         }
 
-        const duplicateYear = await prisma.DVProgram.findFirst({
+        const duplicateYear = await prisma.dVProgram.findFirst({
             where: { dvYear: year, NOT: { id: existingProgram.id } },
         });
 
@@ -278,7 +278,7 @@ export const updateDVProgram = catchAsync(async (req: Request, res: Response, ne
     }
 
     try {
-        const program = await prisma.DVProgram.update({
+        const program = await prisma.dVProgram.update({
             where: { id: existingProgram.id },
             data,
             include: {
@@ -315,8 +315,8 @@ export const updateDVProgramStatus = catchAsync(async (req: Request, res: Respon
         return next(new AppError("Status fields must be boolean values", 400));
     }
 
-    const existingProgram = await prisma.DVProgram.findUnique({
-        where: { id: req.params.id },
+    const existingProgram = await prisma.dVProgram.findUnique({
+        where: { id: String(req.params.id) },
     });
 
     if (!existingProgram) return next(new AppError("DV program not found", 404));
@@ -328,7 +328,7 @@ export const updateDVProgramStatus = catchAsync(async (req: Request, res: Respon
         return next(new AppError("An inactive DV program cannot accept requests", 400));
     }
 
-    const program = await prisma.DVProgram.update({
+    const program = await prisma.dVProgram.update({
         where: { id: existingProgram.id },
         data: {
             ...(isActive !== undefined && { isActive }),
@@ -351,8 +351,8 @@ export const deleteDVProgram = catchAsync(async (req: Request, res: Response, ne
     if (!req.user?.id) return next(new AppError("Authentication required", 401));
     if (!isAdmin(req)) return next(new AppError("Admin access required", 403));
 
-    const program = await prisma.DVProgram.findUnique({
-        where: { id: req.params.id },
+    const program = await prisma.dVProgram.findUnique({
+        where: { id: String(req.params.id) },
         include: { _count: { select: { requests: true } } },
     });
 
@@ -362,7 +362,7 @@ export const deleteDVProgram = catchAsync(async (req: Request, res: Response, ne
         return next(new AppError("Cannot delete a DV program with existing requests", 409));
     }
 
-    await prisma.DVProgram.delete({
+    await prisma.dVProgram.delete({
         where: { id: program.id },
     });
 

@@ -230,7 +230,7 @@ export const getDVApplicationRequest = catchAsync(async (req: Request, res: Resp
     if (!userId) return next(new AppError("Authentication required", 401));
 
     const applicationRequest = await prisma.dVApplicationRequest.findUnique({
-        where: { id: req.params.id },
+        where: { id: String(req.params.id) },
         include: {
             user: {
                 select: {
@@ -288,7 +288,7 @@ export const updateDVApplicationRequestStatus = catchAsync(async (req: Request, 
     }
 
     const existingRequest = await prisma.dVApplicationRequest.findUnique({
-        where: { id: req.params.id },
+        where: { id: String(req.params.id) },
     });
 
     if (!existingRequest) {
@@ -341,7 +341,7 @@ export const cancelDVApplicationRequest = catchAsync(async (req: Request, res: R
     if (!userId) return next(new AppError("Authentication required", 401));
 
     const existingRequest = await prisma.dVApplicationRequest.findUnique({
-        where: { id: req.params.id },
+        where: { id: String(req.params.id) },
     });
 
     if (!existingRequest) {
