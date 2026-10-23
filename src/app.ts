@@ -18,8 +18,11 @@ import orderRoutes from "./modules/order/order.routes.js";
 import accountRoutes from "./modules/bankAccount/account.routes.js";
 import paymentRoutes from "./modules/payment/payment.routes.js";
 import opportunityRoutes from "./modules/digitalOpportunity/opportunity.routes.js";
-import dvApplicationRoutes from "./modules/dvApplication/dvProgram.routes.js";
+
 import dvProgramRoutes from "./modules/dvApplication/dvProgram.routes.js";
+import dvApplicationRequestRoutes from "./modules/dvApplication/dvApplicationRequest.routes.js";
+import dvApplicationDocumentRoutes from "./modules/dvApplication/dvApplicationDocument.routes.js";
+
 
 const app = express();
 
@@ -71,13 +74,15 @@ app.use("/api/products", productRoutes);
 app.use("/api/assets", assetRoutes);
 app.use("/api/access", accessRoutes);
 app.use("/api/growth", growthRoutes);
+app.use("/api/opportunities", opportunityRoutes);
+
+app.use("/api/dv-programs", dvProgramRoutes);
+app.use("/api/dv-application-requests", dvApplicationRequestRoutes);
+app.use("/api/dv-application-requests", dvApplicationDocumentRoutes);
 
 app.use("/api/orders", orderRoutes);
 app.use("/api/payments", paymentRoutes);
 app.use("/api/bank-accounts", accountRoutes);
-app.use("/api/opportunities", opportunityRoutes);
-app.use("/api/dv-programs", dvProgramRoutes);
-// app.use("/api/dv-applications", dvApplicationRoutes);
 
 
 
